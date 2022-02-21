@@ -1,3 +1,4 @@
+from ast import Return
 from binance.client import Client
 from binance import BinanceSocketManager
 import matplotlib
@@ -65,7 +66,7 @@ def findEMA(data, EMAs = []):
         for i in range (0, EMA_lenght):
             PricesSum += data.CP[i]
             if i < (EMA_lenght - 1):
-                EMAs.append('-')
+                EMAs.append(0)
         PricesSum /= EMA_lenght
         EMAs.append(PricesSum)
         return findEMA(data, EMAs)
@@ -74,24 +75,74 @@ def findEMA(data, EMAs = []):
         currentPrice = data.CP[len(EMAs)]
         EMA = (currentPrice * multiplier) + (EMAs[len(EMAs) - 1] * (1 - multiplier))
         EMAs.append(EMA)
-        return findEMA(data, EMAs)        
+        return findEMA(data, EMAs)
 
-        
+def findSMA(data, periods, SMAs = []):
+    title = "SMA" + str(periods)
+
+    if (len(data) == len(SMAs)):
+        data[title] = SMAs
+        return (data)
+
+    if len(data) < (periods * 1.5):
+        print ("not enough data to analyse!")
+        return
+
+    while (len(SMAs) < 100):
+        SMAs.append(0)
+
+    PricesSum = 0
+    for i in range (len(SMAs) - periods, (len(SMAs))):
+        PricesSum += data.CP[i]
+    PricesSum /= periods
+    SMAs.append (PricesSum)
+    return findSMA (data, periods, SMAs)
+
+def findDEMA(data, DEMAs = []):
+    pass
+
 def displayCharts(data):
     matplotlib.use('TkAgg')
     newData = data.drop(['CT', 'symbol', 'OT'], axis = 1, inplace = False)
     newData.index = pd.DatetimeIndex(data['OT'])
     newData.rename(columns = {'OP': 'Open', 'H': 'High', 'L': 'Low', 'CP': 'Close'}, inplace = True)
-    #ax = mpl.subplots()
-    mpl.plot(newData, type = 'candle', style = 'charles', title = 'BTC Price')
+    #EMA = mpl.make_addplot(newData["EMA"].values, panel = 0, color = 'fuchsia')
+    #floatEMA = []
+    #for i in range (0, len(data) - EMA_lenght):
+    #    floatEMA.append(int(data.EMA[i + EMA_lenght]))
+
+    #TODO display the EMA
+
+    mpl.plot(newData, type = 'candle', style = 'charles', title = 'BTC Price', mav = (50, 100))  
     mpl.show()
+
+def findCross(data):
+    flag = False
+    if data.SMA100[0] > data.SMA50[0]:
+        flag = True
+
+    for i in range (1, len(data) - 1):
+        #print (i)
+        if data.SMA100[i] < data.SMA50[i] and flag == True:
+            print ("SMA100 and SMA50 croossed around", data.CT[i])
+            flag = False
+            #return True
+        elif data.SMA100[i] > data.SMA50[i] and flag == False:
+            print ("SMA100 and SMA50 croossed around", data.CT[i])
+            flag = True
+            #return True
+    #print ("SMA100 and SMA50 have't crossed for the last", len(data) - 1, "days")
+    #return False
 
 if __name__ == "__main__":
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
     df = pd.read_sql('BTCUSDT', engine)
     data = df.iloc[:]
     data = findEMA(data, [])
+    data = findSMA(data, 100, [])
+    data = findSMA(data, 50, [])
     print (data)
+    findCross(data)
     displayCharts(data)
     #print(findLower(findLowestPrice(5, data), data))
 

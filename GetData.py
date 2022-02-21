@@ -1,7 +1,10 @@
+from multiprocessing.connection import Client
 from sqlite3 import TimestampFromTicks
 from binance import AsyncClient
+from binance import Client
 from binance import BinanceSocketManager
 import asyncio
+from matplotlib.pyplot import get
 import pandas as pd
 import sqlalchemy
 import json
@@ -18,8 +21,21 @@ async def getData(token_name):
         print(frame)
         await asyncio.sleep(60)
 
+def getHistoricalCandles(token_name):
+    client = Client("CjhmrIu0k3VdrvML36fnYdx04kyA1u02QbJDUzirFfvHLx8wSEiiiRhRdrTzxika", "5faxSLXjUKKHsHT32kjkL78O75LzkeGI3c8Yp9awSQK7DMOlLoeMb990G1abbwrq")
+    bsm = BinanceSocketManager(client)
+    socket = bsm.trade_socket(token_name)
+
+    titles = ["symbol", "OT", "OP", "H", "L", "CP", "CT"]
+
+    for currKline in client._historical_klines_generator(token_name, client.KLINE_INTERVAL_1DAY, "1 Jan, 2021"):
+        frame = createFrame(currKline)
+        frame.to_sql('BTCUSDT', engine, if_exists='append', index=False)
+        print (frame)
+
+
 def createFrame(msg):
-    values = ["BTCUSDT", msg[0][0], msg[0][1], msg[0][2], msg[0][3], msg[0][4], msg[0][6]]
+    values = ["BTCUSDT", msg[0], msg[1], msg[2], msg[3], msg[4], msg[6]]
     titles = ["symbol", "OT", "OP", "H", "L", "CP", "CT", "PD"]
     info = dict(zip(titles, values))
     frame = pd.DataFrame([info])
@@ -35,6 +51,7 @@ def createFrame(msg):
 
 if __name__ == "__main__":
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
-    loop = asyncio.get_event_loop()
-    loop.create_task(getData('BTCUSDT'))
-    loop.run_forever()
+    getHistoricalCandles('BTCUSDT')
+    #loop = asyncio.get_event_loop()
+    #loop.create_task(getData('BTCUSDT'))
+    #loop.run_forever()
