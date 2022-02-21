@@ -20,7 +20,7 @@ async def getData(token_name):
 
 def createFrame(msg):
     values = ["BTCUSDT", msg[0][0], msg[0][1], msg[0][2], msg[0][3], msg[0][4], msg[0][6]]
-    titles = ["symbol", "OT", "OP", "H", "L", "CP", "CT"]
+    titles = ["symbol", "OT", "OP", "H", "L", "CP", "CT", "PD"]
     info = dict(zip(titles, values))
     frame = pd.DataFrame([info])
     frame = frame.loc[:,["symbol", "OT", "OP", "H", "L", "CP", "CT"]]

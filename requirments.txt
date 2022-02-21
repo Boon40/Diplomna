@@ -1,3 +1,6 @@
 python-binance
 pandas
 sqlalchemy
+matplotlib
+mplfinance
+PyQt5
