@@ -26,9 +26,7 @@ def getHistoricalCandles(token_name):
     bsm = BinanceSocketManager(client)
     socket = bsm.trade_socket(token_name)
 
-    titles = ["symbol", "OT", "OP", "H", "L", "CP", "CT"]
-
-    for currKline in client._historical_klines_generator(token_name, client.KLINE_INTERVAL_1DAY, "1 Jan, 2021"):
+    for currKline in client._historical_klines_generator(token_name, client.KLINE_INTERVAL_8HOUR, "15 Aug, 2021"):
         frame = createFrame(currKline)
         frame.to_sql('BTCUSDT', engine, if_exists='append', index=False)
         print (frame)

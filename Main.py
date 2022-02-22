@@ -57,7 +57,15 @@ def findHigher(index, data):
     return newIndex
 
 def findEMA(data, EMAs = []):
+    priceSum = 0
+    while len(EMAs) < 11:
+        EMAs.append(0)
+        priceSum += data.CP[len(EMAs)]
+
     multiplier = (2 / (EMA_lenght + 1))
+
+
+
     if (len(EMAs) == len(data)):
         data['EMA'] = EMAs
         return (data)
@@ -100,6 +108,79 @@ def findSMA(data, periods, SMAs = []):
 
 def findDEMA(data, DEMAs = []):
     pass
+    #TODO
+
+def findCross(data):
+    flag = False
+    ifCrossed = False
+    if data.SMA100[0] > data.SMA50[0]:
+        flag = True
+
+    for i in range (1, len(data) - 1):
+        #print (i)
+        if data.SMA100[i] < data.SMA50[i] and flag == True:
+            print ("SMA100 and SMA50 croossed around", data.CT[i])
+            flag = False
+            ifCrossed = True
+            #return True
+        elif data.SMA100[i] > data.SMA50[i] and flag == False:
+            print ("SMA100 and SMA50 croossed around", data.CT[i])
+            flag = True
+            ifCrossed = True
+            #return True
+    
+    if ifCrossed:
+        return False
+    print ("SMA100 and SMA50 have't crossed for the last", len(data) - 1, "days")
+
+def biggestTrendFibonacci(data):
+    highest = findHighestPrice(len(data), data)
+    lowest = findLowestPrice(len(data), data)
+
+    priceDifferential = data.CP[highest] - data.CP[lowest]
+    firstLine = data.CP[highest]
+    secondLine = data.CP[highest] - ((priceDifferential / 100) * 23.6)
+    thirdLine = data.CP[highest] - ((priceDifferential / 100) * 38.2)
+    forthLine = data.CP[highest] - ((priceDifferential / 100) * 61.8)
+    fifthLine = data.CP[highest] - ((priceDifferential / 100) * 78.6)
+    sixthLine = data.CP[lowest]
+
+    if highest < lowest:
+        return [firstLine, secondLine, thirdLine, forthLine, fifthLine, sixthLine]
+    else:
+        return [sixthLine, fifthLine, forthLine, thirdLine, secondLine, firstLine]
+
+def isCloseToLines(data):
+    lines = biggestTrendFibonacci(data)
+    start = findHighestPrice(len(data), data)
+    isClose = False
+    currentInterval = 1
+    if lines[0] > lines[1]:
+        start = findLowestPrice(len(data), data)
+        currentInterval = 5
+
+    for i in range (start, (len(data) - 1)):
+        if data.CP[i] > ((lines[currentInterval - 1] / 100) * 98):
+            if data.CP[i] < lines[currentInterval - 1] and isClose is False:
+                print ("Current price is close to the", lines[currentInterval - 1], "resistance zone -", i)
+                isClose = True
+            if data.CP[i] > ((lines[currentInterval - 1] / 100) * 102):
+                isClose = False
+                print ("A candle closed above the", lines[currentInterval - 1], "resistance zone -", i)
+                currentInterval -= 1
+
+        if data.CP[i] < ((lines[currentInterval] / 100) * 102):
+            if data.CP[i] > lines[currentInterval] and isClose is False:
+                print ("Current price is close to the", lines[currentInterval], "support line -", i)
+                isClose = True
+            if data.CP[i] < ((lines[currentInterval] / 100) * 98):
+                isClose = False
+                print ("A candle closed below the", lines[currentInterval], "support line -", i)
+                currentInterval += 1
+
+        #if data.CP[i] < ((lines[currentInterval - 1] / 100) * 95) and data.CP[i] > ((lines[currentInterval] / 100) * 105) and isClose is True:
+            #isClose = False
+            #print ("Current price is not close the", lines[currentInterval], "support and", lines[currentInterval - 1], "resistance lines anymore -", i)
 
 def displayCharts(data):
     matplotlib.use('TkAgg')
@@ -113,26 +194,10 @@ def displayCharts(data):
 
     #TODO display the EMA
 
-    mpl.plot(newData, type = 'candle', style = 'charles', title = 'BTC Price', mav = (50, 100))  
+    lines = biggestTrendFibonacci(data)
+
+    mpl.plot(newData, type = 'candle', style = 'charles', title = 'BTC Price', mav = (50, 100), hlines = lines)  
     mpl.show()
-
-def findCross(data):
-    flag = False
-    if data.SMA100[0] > data.SMA50[0]:
-        flag = True
-
-    for i in range (1, len(data) - 1):
-        #print (i)
-        if data.SMA100[i] < data.SMA50[i] and flag == True:
-            print ("SMA100 and SMA50 croossed around", data.CT[i])
-            flag = False
-            #return True
-        elif data.SMA100[i] > data.SMA50[i] and flag == False:
-            print ("SMA100 and SMA50 croossed around", data.CT[i])
-            flag = True
-            #return True
-    #print ("SMA100 and SMA50 have't crossed for the last", len(data) - 1, "days")
-    #return False
 
 if __name__ == "__main__":
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
@@ -141,9 +206,11 @@ if __name__ == "__main__":
     data = findEMA(data, [])
     data = findSMA(data, 100, [])
     data = findSMA(data, 50, [])
-    print (data)
-    findCross(data)
+    #print (data)
+    #findCross(data)
+    isCloseToLines(data)
     displayCharts(data)
+
     #print(findLower(findLowestPrice(5, data), data))
 
     #for i in range (0, len(data) - 1):
