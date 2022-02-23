@@ -10,47 +10,47 @@ import tkinter
 EMA_lenght = 10
 
 def findLowestPrice(amount, data):
-    lowest = data.CP[0]
+    lowest = data.ClosePrice[0]
     index = 0
     for i in range (0, amount):
-        #print (i, ": ", data.CP[i])
-        if data.CP[i] < lowest:
-            lowest = data.CP[i]
+        #print (i, ": ", data.ClosePrice[i])
+        if data.ClosePrice[i] < lowest:
+            lowest = data.ClosePrice[i]
             index = i
     return index
 
 def findHighestPrice(amount, data):
-    highest = data.CP[0]
+    highest = data.ClosePrice[0]
     index = 0
     for i in range (1, amount - 1):
-        if data.CP[i] > highest:
-            highest = data.CP[i]
+        if data.ClosePrice[i] > highest:
+            highest = data.ClosePrice[i]
             index = i
     return index
 
 def findLower(index, data):
-    lower = data.CP[index]
+    lower = data.ClosePrice[index]
     newIndex = index
     amount = 10
     if (len(data) - index) < 10:
         amount = len(data) - index
     for i in range (index, index + amount):
-        if data.CP[i] < lower:
-            lower = data.CP[i]
+        if data.ClosePrice[i] < lower:
+            lower = data.ClosePrice[i]
             newIndex = i
     if newIndex == index:
         return -1
     return newIndex
 
 def findHigher(index, data):
-    higher = data.CP[index]
+    higher = data.ClosePrice[index]
     newIndex = index
     amount = 10
     if (len(data) - index) < 10:
         amount = len(data) - index
     for i in range (index, index + amount):
-        if data.CP[i] > higher:
-            higher = data.CP[i]
+        if data.ClosePrice[i] > higher:
+            higher = data.ClosePrice[i]
             newIndex = i
     if newIndex == index:
         return -1
@@ -60,7 +60,7 @@ def findEMA(data, EMAs = []):
     priceSum = 0
     while len(EMAs) < 11:
         EMAs.append(0)
-        priceSum += data.CP[len(EMAs)]
+        priceSum += data.ClosePrice[len(EMAs)]
 
     multiplier = (2 / (EMA_lenght + 1))
 
@@ -72,7 +72,7 @@ def findEMA(data, EMAs = []):
     if (not EMAs):
         PricesSum = 0
         for i in range (0, EMA_lenght):
-            PricesSum += data.CP[i]
+            PricesSum += data.ClosePrice[i]
             if i < (EMA_lenght - 1):
                 EMAs.append(0)
         PricesSum /= EMA_lenght
@@ -80,7 +80,7 @@ def findEMA(data, EMAs = []):
         return findEMA(data, EMAs)
 
     else:
-        currentPrice = data.CP[len(EMAs)]
+        currentPrice = data.ClosePrice[len(EMAs)]
         EMA = (currentPrice * multiplier) + (EMAs[len(EMAs) - 1] * (1 - multiplier))
         EMAs.append(EMA)
         return findEMA(data, EMAs)
@@ -101,7 +101,7 @@ def findSMA(data, periods, SMAs = []):
 
     PricesSum = 0
     for i in range (len(SMAs) - periods, (len(SMAs))):
-        PricesSum += data.CP[i]
+        PricesSum += data.ClosePrice[i]
     PricesSum /= periods
     SMAs.append (PricesSum)
     return findSMA (data, periods, SMAs)
@@ -119,12 +119,12 @@ def findCross(data):
     for i in range (1, len(data) - 1):
         #print (i)
         if data.SMA100[i] < data.SMA50[i] and flag == True:
-            print ("SMA100 and SMA50 croossed around", data.CT[i])
+            print ("SMA100 and SMA50 croossed around", data.CloseTime[i])
             flag = False
             ifCrossed = True
             #return True
         elif data.SMA100[i] > data.SMA50[i] and flag == False:
-            print ("SMA100 and SMA50 croossed around", data.CT[i])
+            print ("SMA100 and SMA50 croossed around", data.CloseTime[i])
             flag = True
             ifCrossed = True
             #return True
@@ -137,13 +137,13 @@ def biggestTrendFibonacci(data):
     highest = findHighestPrice(len(data), data)
     lowest = findLowestPrice(len(data), data)
 
-    priceDifferential = data.CP[highest] - data.CP[lowest]
-    firstLine = data.CP[highest]
-    secondLine = data.CP[highest] - ((priceDifferential / 100) * 23.6)
-    thirdLine = data.CP[highest] - ((priceDifferential / 100) * 38.2)
-    forthLine = data.CP[highest] - ((priceDifferential / 100) * 61.8)
-    fifthLine = data.CP[highest] - ((priceDifferential / 100) * 78.6)
-    sixthLine = data.CP[lowest]
+    priceDifferential = data.ClosePrice[highest] - data.ClosePrice[lowest]
+    firstLine = data.ClosePrice[highest]
+    secondLine = data.ClosePrice[highest] - ((priceDifferential / 100) * 23.6)
+    thirdLine = data.ClosePrice[highest] - ((priceDifferential / 100) * 38.2)
+    forthLine = data.ClosePrice[highest] - ((priceDifferential / 100) * 61.8)
+    fifthLine = data.ClosePrice[highest] - ((priceDifferential / 100) * 78.6)
+    sixthLine = data.ClosePrice[lowest]
 
     if highest < lowest:
         return [firstLine, secondLine, thirdLine, forthLine, fifthLine, sixthLine]
@@ -160,33 +160,33 @@ def isCloseToLines(data):
         currentInterval = 5
 
     for i in range (start, (len(data) - 1)):
-        if data.CP[i] > ((lines[currentInterval - 1] / 100) * 98):
-            if data.CP[i] < lines[currentInterval - 1] and isClose is False:
+        if data.ClosePrice[i] > ((lines[currentInterval - 1] / 100) * 98):
+            if data.ClosePrice[i] < lines[currentInterval - 1] and isClose is False:
                 print ("Current price is close to the", lines[currentInterval - 1], "resistance zone -", i)
                 isClose = True
-            if data.CP[i] > ((lines[currentInterval - 1] / 100) * 102):
+            if data.ClosePrice[i] > ((lines[currentInterval - 1] / 100) * 102):
                 isClose = False
                 print ("A candle closed above the", lines[currentInterval - 1], "resistance zone -", i)
                 currentInterval -= 1
 
-        if data.CP[i] < ((lines[currentInterval] / 100) * 102):
-            if data.CP[i] > lines[currentInterval] and isClose is False:
+        if data.ClosePrice[i] < ((lines[currentInterval] / 100) * 102):
+            if data.ClosePrice[i] > lines[currentInterval] and isClose is False:
                 print ("Current price is close to the", lines[currentInterval], "support line -", i)
                 isClose = True
-            if data.CP[i] < ((lines[currentInterval] / 100) * 98):
+            if data.ClosePrice[i] < ((lines[currentInterval] / 100) * 98):
                 isClose = False
                 print ("A candle closed below the", lines[currentInterval], "support line -", i)
                 currentInterval += 1
 
-        #if data.CP[i] < ((lines[currentInterval - 1] / 100) * 95) and data.CP[i] > ((lines[currentInterval] / 100) * 105) and isClose is True:
+        #if data.ClosePrice[i] < ((lines[currentInterval - 1] / 100) * 95) and data.ClosePrice[i] > ((lines[currentInterval] / 100) * 105) and isClose is True:
             #isClose = False
             #print ("Current price is not close the", lines[currentInterval], "support and", lines[currentInterval - 1], "resistance lines anymore -", i)
 
 def displayCharts(data):
     matplotlib.use('TkAgg')
-    newData = data.drop(['CT', 'symbol', 'OT'], axis = 1, inplace = False)
-    newData.index = pd.DatetimeIndex(data['OT'])
-    newData.rename(columns = {'OP': 'Open', 'H': 'High', 'L': 'Low', 'CP': 'Close'}, inplace = True)
+    newData = data.drop(['CloseTime', 'Symbol', 'OpenTime'], axis = 1, inplace = False)
+    newData.index = pd.DatetimeIndex(data['OpenTime'])
+    newData.rename(columns = {'OpenPrice': 'Open', 'High': 'High', 'Low': 'Low', 'ClosePrice': 'Close'}, inplace = True)
     #EMA = mpl.make_addplot(newData["EMA"].values, panel = 0, color = 'fuchsia')
     #floatEMA = []
     #for i in range (0, len(data) - EMA_lenght):
@@ -214,27 +214,27 @@ if __name__ == "__main__":
     #print(findLower(findLowestPrice(5, data), data))
 
     #for i in range (0, len(data) - 1):
-    #    if data.OP[i] > data.CP[i]:
-    #        print (data.symbol[i], " is down ", data.OP[i] - data.CP[i], " in the last minute")
-    #    elif data.OP[i] < data.CP[i]:
-    #        print (data.symbol[i], " is up ", data.CP[i] - data.OP[i], " in the last minute")
-    #    elif data.OP[i] == data.CP[i]:
-    #        print (data.symbol[i], "'s price hasn't moved in the last minute")
+    #    if data.OpenPrice[i] > data.ClosePrice[i]:
+    #        print (data.Symbol[i], " is down ", data.OpenPrice[i] - data.ClosePrice[i], " in the last minute")
+    #    elif data.OpenPrice[i] < data.ClosePrice[i]:
+    #        print (data.Symbol[i], " is up ", data.ClosePrice[i] - data.OpenPrice[i], " in the last minute")
+    #    elif data.OpenPrice[i] == data.ClosePrice[i]:
+    #        print (data.Symbol[i], "'s price hasn't moved in the last minute")
             
     
-    #lowest = data.L[1]
-    #highest = data.H[1]
-    #lowestClose = data.CP[1]
-    #highestClose = data.CP[1]
+    #lowest = data.Low[1]
+    #highest = data.High[1]
+    #lowestClose = data.ClosePrice[1]
+    #highestClose = data.ClosePrice[1]
     #for i in range (2, 5):
-    #    if data.L[i] < lowest:
-    #        lowest = data.L[i]
-    #    if data.H[i] > highest:
-    #        highest = data.H[i]
-    #   if data.CP[i] < lowestClose:
-    #        lowestClose = data.CP[i]
-    #    if data.CP[i] > highestClose:
-    #        highestClose = data.CP[i]
+    #    if data.Low[i] < lowest:
+    #        lowest = data.Low[i]
+    #    if data.High[i] > highest:
+    #        highest = data.High[i]
+    #   if data.ClosePrice[i] < lowestClose:
+    #        lowestClose = data.ClosePrice[i]
+    #    if data.ClosePrice[i] > highestClose:
+    #        highestClose = data.ClosePrice[i]
 
     #print("lowest: ", lowest)
     #print("highest: ", highest)
