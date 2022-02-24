@@ -1,11 +1,11 @@
-from ast import Return
 from binance.client import Client
 from binance import BinanceSocketManager
 import matplotlib
+from matplotlib import markers
+from matplotlib.pyplot import hlines
 import pandas as pd
 import sqlalchemy
 import mplfinance as mpl
-import tkinter
 
 EMA_lenght = 10
 
@@ -147,9 +147,23 @@ def biggestTrendFibonacci(data):
 
     return [sixthLine, fifthLine, forthLine, thirdLine, secondLine, firstLine]
 
+def deltaLines(lines = []):
+    dLines = []
+
+    for currentInterval in range(1,6):
+        upLine = lines[currentInterval]
+        downLine = lines[currentInterval - 1]
+        delta = (upLine - downLine) * 5 / 100
+        dLines.append(upLine - delta)
+        dLines.append(downLine + delta)
+        #dLines.append(downLine)
+    #dLines.append(lines[5])
+    return dLines
+
 def isCloseToLines(data):
     lines = biggestTrendFibonacci(data)
     isClose = False
+    changedInterval = 0
 
     price = data.ClosePrice[0]
 
@@ -177,6 +191,7 @@ def isCloseToLines(data):
                 isClose = False
                 print ("A candle closed above the", upLine, "resistance zone -", i)
                 currentInterval += 1
+                changedInterval = 1
 
         if price < (downLine + delta):
             if price > downLine - delta and isClose is False:
@@ -186,12 +201,20 @@ def isCloseToLines(data):
                 isClose = False
                 print ("A candle closed below the", downLine, "support zone -", i)
                 currentInterval -= 1
+                changedInterval = -1
 
         else:
             if isClose:
                 isClose = False
                 print ("current price is not close to either of the lines")
-        print (currentInterval, upLine, downLine, price)
+                if changedInterval == 0:
+                    print("The line broke")
+                elif changedInterval > 0:
+                    print("bounce up")
+                else:
+                    print("bounce down")
+                changedInterval = False
+        print(data.ClosePrice[i], i)
 
 def displayCharts(data):
     matplotlib.use('TkAgg')
@@ -206,8 +229,17 @@ def displayCharts(data):
     #TODO display the EMA
 
     lines = biggestTrendFibonacci(data)
+    dlines = deltaLines(lines)
+    alphaLines = []
+    for i in range(0, 6):
+        alphaLines.append([(data.OpenTime[0], lines[i]), (data.OpenTime[len(newData) - 1], lines[i])])
+    for i in range(0, 10):
+        alphaLines.append([(data.OpenTime[0], dlines[i]), (data.OpenTime[len(newData) - 1], dlines[i])])
+    alphaLines.sort()
 
-    mpl.plot(newData, type = 'candle', style = 'charles', title = 'BTC Price', mav = (50, 100), hlines = lines)  
+    mpl.plot(newData, type = 'candle', style = 'charles', title = 'BTC Price', mav = (50, 100), alines = dict(alines=alphaLines,
+                                                                                                              colors=['blue', 'red', 'red'],
+                                                                                                              linewidths = 0.5))
     mpl.show()
 
 if __name__ == "__main__":
