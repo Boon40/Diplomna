@@ -145,42 +145,53 @@ def biggestTrendFibonacci(data):
     fifthLine = data.ClosePrice[highest] - ((priceDifferential / 100) * 78.6)
     sixthLine = data.ClosePrice[lowest]
 
-    if highest < lowest:
-        return [firstLine, secondLine, thirdLine, forthLine, fifthLine, sixthLine]
-    else:
-        return [sixthLine, fifthLine, forthLine, thirdLine, secondLine, firstLine]
+    return [sixthLine, fifthLine, forthLine, thirdLine, secondLine, firstLine]
 
 def isCloseToLines(data):
     lines = biggestTrendFibonacci(data)
-    start = findHighestPrice(len(data), data)
     isClose = False
-    currentInterval = 1
-    if lines[0] > lines[1]:
-        start = findLowestPrice(len(data), data)
-        currentInterval = 5
 
-    for i in range (start, (len(data) - 1)):
-        if data.ClosePrice[i] > ((lines[currentInterval - 1] / 100) * 98):
-            if data.ClosePrice[i] < lines[currentInterval - 1] and isClose is False:
-                print ("Current price is close to the", lines[currentInterval - 1], "resistance zone -", i)
-                isClose = True
-            if data.ClosePrice[i] > ((lines[currentInterval - 1] / 100) * 102):
-                isClose = False
-                print ("A candle closed above the", lines[currentInterval - 1], "resistance zone -", i)
-                currentInterval -= 1
+    price = data.ClosePrice[0]
 
-        if data.ClosePrice[i] < ((lines[currentInterval] / 100) * 102):
-            if data.ClosePrice[i] > lines[currentInterval] and isClose is False:
-                print ("Current price is close to the", lines[currentInterval], "support line -", i)
+    currentInterval = 0
+    for j in lines:
+        if price > j:
+            currentInterval += 1
+
+
+    for i in range (0, (len(data) - 1)):
+        upLine = lines[currentInterval]
+        downLine = lines[currentInterval - 1]
+        delta = (upLine - downLine) * 5 / 100
+        price = data.ClosePrice[i]
+
+        if currentInterval < 1 or currentInterval > 5:
+            print ("Error")
+            return
+
+        if price > (upLine - delta):
+            if price < upLine + delta and isClose is False:
+                print ("Current price is close to the", upLine, "resistance zone -", i)
                 isClose = True
-            if data.ClosePrice[i] < ((lines[currentInterval] / 100) * 98):
+            else:
                 isClose = False
-                print ("A candle closed below the", lines[currentInterval], "support line -", i)
+                print ("A candle closed above the", upLine, "resistance zone -", i)
                 currentInterval += 1
 
-        #if data.ClosePrice[i] < ((lines[currentInterval - 1] / 100) * 95) and data.ClosePrice[i] > ((lines[currentInterval] / 100) * 105) and isClose is True:
-            #isClose = False
-            #print ("Current price is not close the", lines[currentInterval], "support and", lines[currentInterval - 1], "resistance lines anymore -", i)
+        if price < (downLine + delta):
+            if price > downLine - delta and isClose is False:
+                print ("Current price is close to the", downLine, "support zone -", i)
+                isClose = True
+            else:
+                isClose = False
+                print ("A candle closed below the", downLine, "support zone -", i)
+                currentInterval -= 1
+
+        else:
+            if isClose:
+                isClose = False
+                print ("current price is not close to either of the lines")
+        print (currentInterval, upLine, downLine, price)
 
 def displayCharts(data):
     matplotlib.use('TkAgg')
