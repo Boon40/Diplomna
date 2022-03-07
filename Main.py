@@ -11,9 +11,8 @@ import matplotlib.animation as animation
 import asyncio
 
 EMA_lenght = 10
-global ifGoldenCross
-
-
+ifGoldenCross = False
+isClose = False
 
 def findLowestPrice(amount, df):
     lowest = df.ClosePrice[0]
@@ -63,32 +62,11 @@ def findEMA(df, EMAs = []):
         EMAs.append(EMA)
         return findEMA(df, EMAs)
 
-def findSMA(df, periods, SMAs = []):
-    title = "SMA" + str(periods)
-
-    if (len(df) == len(SMAs)):
-        df[title] = SMAs
-        return (df)
-
-    if len(df) < (periods * 1.5):
-        print ("not enough df to analyse!")
-        return
-
-    while (len(SMAs) < 100):
-        SMAs.append(0)
-
-    PricesSum = 0
-    for i in range (len(SMAs) - periods, (len(SMAs))):
-        PricesSum += df.ClosePrice[i]
-    PricesSum /= periods
-    SMAs.append (PricesSum)
-    return findSMA (df, periods, SMAs)
-
 def findDEMA(df, DEMAs = []):
     pass
     #TODO
 
-def findCross(df, short = False):
+def findCross(df, start, short = False):
     lineSmall = []
     lineBig = []
     SMASmall = 0
@@ -103,24 +81,23 @@ def findCross(df, short = False):
         lineBig = df.SMA100
         SMASmall = 50
         SMABig = 100
-    ifGoldenCross = False
-    ifCrossed = False
+    global ifGoldenCross
     if lineBig[0] < lineSmall[0]:
         ifGoldenCross = True
 
-    for i in range (1, len(df) - 1):
+    for i in range (start, len(df) - 1):
         if lineBig[i] > lineSmall[i] and ifGoldenCross == True:
-            print ("There was a death cross at around ", df.CloseTime[i], "- price should go down soon")
+            if SMASmall == 5 and SMABig == 15:
+                print ("There was a death cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go down a bit in the short term")
+            elif SMASmall == 50 and SMABig == 100:
+                print ("There was a death cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go down at the long term")
             ifGoldenCross = False
-            ifCrossed = True
         elif lineBig[i] < lineSmall[i] and ifGoldenCross == False:
-            print ("There was a golden cross at around ", df.CloseTime[i], "- price should go up soon")
+            if SMASmall == 5 and SMABig == 15:
+                print ("There was a golden cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go up a bit in the short term")
+            elif SMASmall == 50 and SMABig == 100:
+                print ("There was a golden cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go up at the long term")
             ifGoldenCross = True
-            ifCrossed = True
-    
-    if ifCrossed:
-        return False
-    print ("SMA100 and SMA50 have't crossed for the last", len(df) - 1, "days")
 
 def biggestTrendFibonacci(df):
     highest = findHighestPrice(len(df), df)
@@ -147,25 +124,25 @@ def deltaLines(lines = []):
         dLines.append(upLine - delta)
     return dLines
 
-def isCloseToLines(df):
+def isCloseToLines(df, start):
     lines = biggestTrendFibonacci(df)
-    isClose = False
-    changedInterval = 0
+    global isClose
 
-    price = df.ClosePrice[0]
+    price = df.ClosePrice[start]
 
     currentInterval = 0
     for j in lines:
         if price > j:
             currentInterval += 1
 
+    isBounce = 0
 
-    for i in range (0, (len(df) - 1)):
+    for i in range (start, (len(df) - 1)):
         upLine = lines[currentInterval]
         downLine = lines[currentInterval - 1]
         delta = (upLine - downLine) * 5 / 100
         price = df.ClosePrice[i]
-
+        
         if currentInterval < 1 or currentInterval > 5:
             print ("Error")
             return
@@ -174,32 +151,35 @@ def isCloseToLines(df):
             if price < upLine + delta and isClose is False:
                 print ("Current price is close to the", upLine, "resistance zone -", i)
                 isClose = True
-            else:
+                isBounce += 1
+            elif price > upLine + delta:
                 isClose = False
                 print ("A candle closed above the", upLine, "resistance zone -", i)
                 currentInterval += 1
-                changedInterval = 1
+                isBounce -= 1
 
-        if price < (downLine + delta):
+        elif price < (downLine + delta):
             if price > downLine - delta and isClose is False:
                 print ("Current price is close to the", downLine, "support zone -", i)
                 isClose = True
-            else:
+                isBounce -= 1
+            elif price < downLine - delta:
                 isClose = False
                 print ("A candle closed below the", downLine, "support zone -", i)
                 currentInterval -= 1
-                changedInterval = -1
+                isBounce += 1
 
         else:
             if isClose:
                 isClose = False
-                print ("current price is not close to either of the lines", i)
-                if changedInterval > 0:
-                    print("bounce up")
+                if isBounce > 0:
+                    print ("The resistance zone was not breaked - price should be boncing down now")
+                    isBounce = 0
+                elif isBounce < 0:
+                    print ("The support zone was not breaked - price should be bouncing up now")
+                    isBounce = 0
                 else:
-                    print("bounce down")
-                changedInterval = False
-            print("nothing happened", i)
+                    print ("Price is not close to either of the zones anymore")
 
 
 def displayCharts(df):
@@ -231,42 +211,28 @@ def displayCharts(df):
 def animate(ival, df):
     mpl.plot(df, type='candle', style = 'charles')
 
-async def main(df):
+async def checkChanges(engine, candleSizeSeconds):
     while True:
-        await asyncio.sleep(60)
-        dataSize = len(df)
-        SMA5 = 0
-        SMA15 = 0
-        SMA50 = 0
-        SMA100 = 0
-        for i in range (dataSize - 1, dataSize - 101):
-            if i > dataSize - 6:
-                SMA5 += df.ClosePrise[i]
-            if i > dataSize - 16:
-                    SMA15 += df.ClosePrise[i]
-            if i > dataSize - 51:
-                SMA50 += df.ClosePrise[i]
-            SMA100 += df.ClosePrise[i]
-        df.SMA5[dataSize - 1] = SMA5 / 5
-        df.SMA15[dataSize - 1] = SMA15 / 15
-        df.SMA50[dataSize - 1] = SMA50 / 50
-        df.SMA100[dataSize - 1] = SMA100 / 100
+        await asyncio.sleep(candleSizeSeconds)
+        df = pd.read_sql('BTCUSDT', engine)
+        df = df.iloc[:]
+        findCross(df, len(df) - 2, False)
+        isCloseToLines(df, len(df) - 2)
+        df = df.iloc[len(df) - 1:]
         print (df)
+        print ("________________")
 
 if __name__ == "__main__":
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
     df = findEMA(df, [])
-    df = findSMA(df, 100, [])
-    df = findSMA(df, 50, [])
-    df = findSMA(df, 15, [])
-    df = findSMA(df, 5, [])
     print (df)
-    findCross(df, False)
+    #findCross(df, 0, False)
+    candleSizeSeconds = int((df.OpenTime[1] - df.OpenTime[0]).total_seconds())
+    isCloseToLines(df, 0)
     displayCharts(df)
-    loop = asyncio.get_event_loop()
-    loop.create_task(df = df.iloc[1: , :])
-    loop.create_task(main(df))
-    loop.run_forever()
+    #loop = asyncio.get_event_loop()
+    #loop.create_task(checkChanges(engine, candleSizeSeconds))
+    #loop.run_forever()
     

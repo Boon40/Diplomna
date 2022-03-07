@@ -4,3 +4,6 @@ sqlalchemy
 matplotlib
 mplfinance
 PyQt5
+flask
+flask_login
+flask_mail

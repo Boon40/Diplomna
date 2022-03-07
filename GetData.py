@@ -15,12 +15,36 @@ from sqlalchemy.ext.declarative import declarative_base
 
 engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
 
-def getHistoricalData4Hours(token_name):
+def getHistoricalData(token_name, candleSize):
     client = Client("CjhmrIu0k3VdrvML36fnYdx04kyA1u02QbJDUzirFfvHLx8wSEiiiRhRdrTzxika", "5faxSLXjUKKHsHT32kjkL78O75LzkeGI3c8Yp9awSQK7DMOlLoeMb990G1abbwrq")
     bsm = BinanceSocketManager(client)
     socket = bsm.trade_socket(token_name)
     firstRun = True
-    for currKline in client._historical_klines_generator(token_name, client.KLINE_INTERVAL_1MINUTE, str(datetime.now() - relativedelta(hours=5))):
+    pastTime = relativedelta(hours=8)
+    if candleSize == '1M':
+        candleSize = client.KLINE_INTERVAL_1MINUTE
+    elif candleSize == '15M':
+        candleSize = client.KLINE_INTERVAL_15MINUTE
+        pastTime = relativedelta(days=5)
+    elif candleSize == '1H':
+        candleSize = client.KLINE_INTERVAL_1HOUR
+        pastTime = relativedelta(days=15)
+    elif candleSize == '4H':
+        candleSize = client.KLINE_INTERVAL_4HOUR
+        pastTime = relativedelta(days=70)
+    elif candleSize == '8H':
+        candleSize = client.KLINE_INTERVAL_8HOUR
+        pastTime = relativedelta(days=140)
+    elif candleSize == '12H':
+        candleSize = client.KLINE_INTERVAL_12HOUR
+        pastTime = relativedelta(days=210)
+    elif candleSize == '1D':
+        candleSize = client.KLINE_INTERVAL_1DAY
+        pastTime = relativedelta(years=1)
+    else:
+        print ("That's an invalid candle size!")
+        return
+    for currKline in client._historical_klines_generator(token_name, candleSize, str(datetime.now() - pastTime)):
         SMA5, SMA15, SMA50, SMA100 = 0, 0, 0, 0
         if not firstRun:
             df = pd.read_sql('BTCUSDT', engine)
@@ -49,56 +73,73 @@ def getHistoricalData4Hours(token_name):
         frame.to_sql(token_name, engine, if_exists='append', index=False)
         print (frame)
 
-async def getCurrentData4Hours(token_name, df):
+async def getCurrentData(token_name, engine, candleSize):
     asyncClient = await AsyncClient.create("CjhmrIu0k3VdrvML36fnYdx04kyA1u02QbJDUzirFfvHLx8wSEiiiRhRdrTzxika", "5faxSLXjUKKHsHT32kjkL78O75LzkeGI3c8Yp9awSQK7DMOlLoeMb990G1abbwrq")
     bsm = BinanceSocketManager(asyncClient)
     socket = bsm.trade_socket(token_name)
-
-    await asyncio.sleep(60)
+    if candleSize == '1M':
+        await asyncio.sleep(60)
+    elif candleSize == '15M':
+        await asyncio.sleep(900)
+    elif candleSize == '1H':
+        await asyncio.sleep(3600)
+    elif candleSize == '4H':
+        await asyncio.sleep(14400)
+    elif candleSize == '8H':
+        await asyncio.sleep(28800)
+    elif candleSize == '12H':
+        await asyncio.sleep(43200)
+    elif candleSize == '1D':
+        await asyncio.sleep(86400)
+    else:
+        print ("That's an invalid candle size!")
+        return
     while True:
-        dataSize = len(df)
+        df = pd.read_sql('BTCUSDT', engine)
+        df = df.iloc[:]
+        dataSize = len(df) - 1
+        if dataSize < 150:
+            print ("Not enough data to calculate the simple moving averages")
+            return
         SMA5, SMA15, SMA50, SMA100 = 0, 0, 0, 0
 
-        for i in range (dataSize, dataSize - 100):
+        #Ribcho range step = -1 (default 1)
+        for i in range (dataSize, dataSize - 100, -1):
             if i > dataSize - 5:
-                SMA5 += df.ClosePrise[i]
+                SMA5 += df.ClosePrice[i]
             if i > dataSize - 15:
-                    SMA15 += df.ClosePrise[i]
+                    SMA15 += df.ClosePrice[i]
             if i > dataSize - 50:
-                SMA50 += df.ClosePrise[i]
-            SMA100 += df.ClosePrise[i]
+                SMA50 += df.ClosePrice[i]
+            SMA100 += df.ClosePrice[i] 
         SMA5 /= 5
         SMA15 /= 15
         SMA50 /= 50
         SMA100 /= 100
-
-        msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_1MINUTE, limit=1)
+        if candleSize == '1M':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_1MINUTE, limit=1)
+            await asyncio.sleep(60)
+        elif candleSize == '15M':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_15MINUTE, limit=1)
+            await asyncio.sleep(900)
+        elif candleSize == '1H':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_1HOUR, limit=1)
+            await asyncio.sleep(3600)
+        elif candleSize == '4H':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_4HOUR, limit=1)
+            await asyncio.sleep(14400)
+        elif candleSize == '8H':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_8HOUR, limit=1)
+            await asyncio.sleep(28800)
+        elif candleSize == '12H':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_12HOUR, limit=1)
+            await asyncio.sleep(43200)
+        elif candleSize == '1D':
+            msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_1DAY, limit=1)
+            await asyncio.sleep(86400)
         frame = createFrame(msg[0], [SMA5, SMA15, SMA50, SMA100])
         frame.to_sql(token_name, engine, if_exists='append', index=False)
         print(frame)
-        await asyncio.sleep(60)
-
-def getHistoricalData1Day(token_name):
-    client = Client("CjhmrIu0k3VdrvML36fnYdx04kyA1u02QbJDUzirFfvHLx8wSEiiiRhRdrTzxika", "5faxSLXjUKKHsHT32kjkL78O75LzkeGI3c8Yp9awSQK7DMOlLoeMb990G1abbwrq")
-    bsm = BinanceSocketManager(client)
-    socket = bsm.trade_socket(token_name)
-    for currKline in client._historical_klines_generator(token_name, client.KLINE_INTERVAL_1DAY, str(datetime.now() - relativedelta(years=1))):
-        frame = createFrame(currKline)
-        frame.to_sql(token_name, engine, if_exists='append', index=False)
-        print (frame)
-
-async def getCurrentData1Day(token_name):
-    asyncClient = await AsyncClient.create("CjhmrIu0k3VdrvML36fnYdx04kyA1u02QbJDUzirFfvHLx8wSEiiiRhRdrTzxika", "5faxSLXjUKKHsHT32kjkL78O75LzkeGI3c8Yp9awSQK7DMOlLoeMb990G1abbwrq")
-    bsm = BinanceSocketManager(asyncClient)
-    socket = bsm.trade_socket(token_name)
-
-    await asyncio.sleep(86400)
-    while True:
-        msg = await asyncClient.get_klines(symbol=token_name, interval=asyncClient.KLINE_INTERVAL_1DAY, limit=1)
-        frame = createFrame(msg[0])
-        frame.to_sql(token_name, engine, if_exists='append', index=False)
-        print(frame)
-        await asyncio.sleep(86400)
 
 def createFrame(msg, SMAs):
     values = []
@@ -153,12 +194,12 @@ def findSMA(df, periods, SMAs = []):
 
 if __name__ == "__main__":
     #getHistoricalData1Day('BTCUSDT')
-    getHistoricalData4Hours('BTCUSDT')
+    getHistoricalData('BTCUSDT', "15M")
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
     print (df)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(getCurrentData4Hours('BTCUSDT', df))
+    loop.create_task(getCurrentData('BTCUSDT', engine, "15M"))
     #loop.create_task(getCurrentData1Day('BTCUSDT'))
     loop.run_forever()
