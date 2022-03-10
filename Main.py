@@ -7,6 +7,7 @@ from matplotlib.pyplot import hlines
 import pandas as pd
 import sqlalchemy
 import mplfinance as mpl
+from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 import asyncio
 
@@ -208,9 +209,6 @@ def displayCharts(df):
                                                                                                               linewidths = 0.5))
     mpl.show()
 
-def animate(ival, df):
-    mpl.plot(df, type='candle', style = 'charles')
-
 async def checkChanges(engine, candleSizeSeconds):
     while True:
         await asyncio.sleep(candleSizeSeconds)
@@ -230,7 +228,7 @@ if __name__ == "__main__":
     print (df)
     #findCross(df, 0, False)
     candleSizeSeconds = int((df.OpenTime[1] - df.OpenTime[0]).total_seconds())
-    isCloseToLines(df, 0)
+    #isCloseToLines(df, 0)
     displayCharts(df)
     #loop = asyncio.get_event_loop()
     #loop.create_task(checkChanges(engine, candleSizeSeconds))

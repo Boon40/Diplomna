@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum, Bool
 from sqlalchemy.orm import relationship, aliased
 from sqlalchemy.sql.expression import func
 from datetime import datetime
+from sqlalchemy import Date
 
 
 from Database import Base
@@ -13,6 +14,7 @@ class User(Base):
     password = Column(String(120), nullable=False)
     firstName = Column(String(200), nullable=False)
     lastName = Column(String(200), nullable=False)
+    birthDate = Column(Date, nullable=False)
     login_id = Column(String(36), nullable=True)
     confirmed = Column(Boolean, nullable=False, default=False)
 

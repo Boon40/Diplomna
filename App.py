@@ -3,6 +3,7 @@ from Decorators import check_confirmed
 from Database import db_session, init_db
 from Models import User
 
+from datetime import datetime
 import uuid
 
 from flask_login import LoginManager
@@ -65,14 +66,21 @@ def register():
         password = request.form["password"]
         confirm_pasword = request.form["verify_password"]
         email = request.form["email"]
+        dt = request.form["birth_date"]
+        dt = datetime.strptime(dt, "%Y-%m-%d")
+        date_of_birth = dt.date()
 
         user = User.query.filter_by(email=email).first()
         if(user is not None):
             flash("This email is already in use!", "danger")
             return render_template("register.html")
+        
+        if ((datetime.now().date() - date_of_birth).days / 365) < 18:
+            flash("You need to be 18+ to register!", "danger")
+            return render_template("register.html")
 
         if confirm_pasword == password:
-            user = User(password=generate_password_hash(password), email=email, firstName=firstName, lastName=lastName, confirmed=True)
+            user = User(password=generate_password_hash(password), email=email, firstName=firstName, lastName=lastName, birthDate=date_of_birth, confirmed=True)
 
             #send_token(email)
 
@@ -116,29 +124,80 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/change_email', methods=['GET', 'POST'])
 @login_required
 @check_confirmed
-def profile():
+def change_email():
     if request.method == "POST":
-        email = request.form["email"]
-        user = User.query.filter_by(email=email).first()
+        currentEmail = request.form["currentEmail"]
+        newEmail = request.form["newEmail"]
+        confirmNewEmail = request.form["confirmNewEmail"]
         password = request.form["password"]
-        if check_password_hash(current_user.password, request.form["password"]):
+        if current_user.email == currentEmail:
+            user = User.query.filter_by(email=newEmail).first()
             if user is not None:
                 flash("This email is already used!", "danger")
-                return render_template("profile.html")
-            current_user.email = email
-            current_user.firstName = request.form["firstName"]
-            current_user.lastName = request.form["lastName"]
+                return render_template("change_email.html")
+            if newEmail == confirmNewEmail:
+                if check_password_hash(current_user.password, request.form["password"]):
+                    current_user.email = newEmail
+                    db_session.commit()
+                    flash("Email updated!", "success")
+                    return redirect (url_for('index'))
+                else:
+                    flash("Wrong password!", "danger")
+                    return render_template("change_email.html")
+            else:
+                flash("Emails don't match!", "danger")
+                return render_template("change_email.html")
+        else:
+            flash("The email you are trying to change is not yours!", "danger")
+            return render_template("change_email.html")
+    else:
+        return render_template("change_email.html")
+
+@app.route('/change_names', methods=['GET', 'POST'])
+@login_required
+@check_confirmed
+def change_names():
+    if request.method == "POST":
+        newFirstName = request.form["newFirstName"]
+        newLastName = request.form["newLastName"]
+        password = request.form["password"]            
+        if check_password_hash(current_user.password, request.form["password"]):
+            current_user.firstName = newFirstName
+            current_user.lastName = newLastName
             db_session.commit()
-            flash("Profile Updated!", "success")
-            return redirect(url_for('profile'))
+            flash("Names Updated!", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("Wrong password", "danger")
+            return redirect(url_for('change_names'))
+    else:
+        return render_template("change_names.html")
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+@check_confirmed
+def change_password():
+    if request.method == "POST":
+        currentPassword = request.form["currentPassword"]
+        newPassword = request.form["newPassword"]
+        confirmNewPassword = request.form["confirmNewPassword"]
+        if check_password_hash(current_user.password, request.form["currentPassword"]):
+            if newPassword == confirmNewPassword:
+                current_user.password = generate_password_hash(newPassword)
+                db_session.commit()
+                flash("Password Updated!", "success")
+                return redirect(url_for('index'))
+            else:
+                flash("Passwords does not match", "danger")
+                redirect(url_for('change_password'))
         else:
             flash("Wrong password!", "danger")
-            return redirect(url_for('profile'))
+            return redirect(url_for('change_password'))
     else:
-        return render_template("profile.html")
+        return render_template("change_password.html")
 
 @app.route('/forgot_password', methods=["GET", "POST"])
 def forgotPassword():
