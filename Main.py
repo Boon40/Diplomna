@@ -1,3 +1,4 @@
+from xml.dom import NotFoundErr
 from binance.client import Client
 from binance import BinanceSocketManager
 import matplotlib
@@ -14,6 +15,7 @@ import asyncio
 EMA_lenght = 10
 ifGoldenCross = False
 isClose = False
+global notifications
 
 def findLowestPrice(amount, df):
     lowest = df.ClosePrice[0]
@@ -89,15 +91,23 @@ def findCross(df, start, short = False):
     for i in range (start, len(df) - 1):
         if lineBig[i] > lineSmall[i] and ifGoldenCross == True:
             if SMASmall == 5 and SMABig == 15:
-                print ("There was a death cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go down a bit in the short term")
+                message = "There was a death cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go down a bit in the short term"
+                print (message)
+                notifications.append(message)
             elif SMASmall == 50 and SMABig == 100:
-                print ("There was a death cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go down at the long term")
+                message = "There was a death cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go down at the long term"
+                print (message)
+                notifications.append(message)
             ifGoldenCross = False
         elif lineBig[i] < lineSmall[i] and ifGoldenCross == False:
             if SMASmall == 5 and SMABig == 15:
-                print ("There was a golden cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go up a bit in the short term")
+                message = "There was a golden cross by SMA " + str(SMASmall) + " and SMA " + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go up a bit in the short term"
+                print (message)
+                notifications.append(message)
             elif SMASmall == 50 and SMABig == 100:
-                print ("There was a golden cross by SMA",SMASmall, "and SMA",SMABig, "at around ", df.CloseTime[i], "- price should go up at the long term")
+                message = "There was a golden cross by SMA " + str(SMASmall) + " and SMA " + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go up at the long term"
+                print (message)
+                notifications.append(message) 
             ifGoldenCross = True
 
 def biggestTrendFibonacci(df):
@@ -150,23 +160,31 @@ def isCloseToLines(df, start):
 
         if price > (upLine - delta):
             if price < upLine + delta and isClose is False:
-                print ("Current price is close to the", upLine, "resistance zone -", i)
+                message = "Current price is close to the " + str(upLine) + " resistance zone -" + str(i)
+                print (message)
+                notifications.append(message)
                 isClose = True
                 isBounce += 1
             elif price > upLine + delta:
                 isClose = False
-                print ("A candle closed above the", upLine, "resistance zone -", i)
+                message = "A candle closed above the " + str(upLine) + " resistance zone -" + str(i)
+                print (message)
+                notifications.append(message)
                 currentInterval += 1
                 isBounce -= 1
 
         elif price < (downLine + delta):
             if price > downLine - delta and isClose is False:
-                print ("Current price is close to the", downLine, "support zone -", i)
+                message = "Current price is close to the " + str(downLine) + " support zone -" + str(i)
+                print (message)
+                notifications.append(message)
                 isClose = True
                 isBounce -= 1
             elif price < downLine - delta:
                 isClose = False
-                print ("A candle closed below the", downLine, "support zone -", i)
+                message = "A candle closed below the " + str(downLine) + " support zone -" + str(i)
+                print (message)
+                notifications.append(message)
                 currentInterval -= 1
                 isBounce += 1
 
@@ -174,13 +192,19 @@ def isCloseToLines(df, start):
             if isClose:
                 isClose = False
                 if isBounce > 0:
-                    print ("The resistance zone was not breaked - price should be boncing down now")
+                    message = "The resistance zone was not breaked - price should be boncing down now"
+                    print (message)
+                    notifications.append(message)
                     isBounce = 0
                 elif isBounce < 0:
-                    print ("The support zone was not breaked - price should be bouncing up now")
+                    message = "The support zone was not breaked - price should be bouncing up now"
+                    print (message)
+                    notifications.append(message)
                     isBounce = 0
                 else:
-                    print ("Price is not close to either of the zones anymore")
+                    message = "Price is not close to either of the zones anymore"
+                    print (message)
+                    notifications.append(message)
 
 
 def displayCharts(df):
@@ -221,6 +245,7 @@ async def checkChanges(engine, candleSizeSeconds):
         print ("________________")
 
 if __name__ == "__main__":
+    notifications = []
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
@@ -229,8 +254,9 @@ if __name__ == "__main__":
     #findCross(df, 0, False)
     candleSizeSeconds = int((df.OpenTime[1] - df.OpenTime[0]).total_seconds())
     #isCloseToLines(df, 0)
-    displayCharts(df)
-    #loop = asyncio.get_event_loop()
-    #loop.create_task(checkChanges(engine, candleSizeSeconds))
-    #loop.run_forever()
+    i = 0
+    #displayCharts(df)
+    loop = asyncio.get_event_loop()
+    loop.create_task(checkChanges(engine, candleSizeSeconds))
+    loop.run_forever()
     

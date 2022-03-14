@@ -194,12 +194,12 @@ def findSMA(df, periods, SMAs = []):
 
 if __name__ == "__main__":
     #getHistoricalData1Day('BTCUSDT')
-    getHistoricalData('BTCUSDT', "15M")
+    getHistoricalData('BTCUSDT', "1M")
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
     print (df)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(getCurrentData('BTCUSDT', engine, "15M"))
+    loop.create_task(getCurrentData('BTCUSDT', engine, "1M"))
     #loop.create_task(getCurrentData1Day('BTCUSDT'))
     loop.run_forever()

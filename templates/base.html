@@ -22,7 +22,6 @@
                 background-size: cover;
             }*/
             body{
-
                 background: url('../static/images/backgroundBTC.jpg');
                 background-color: #000000;
                 background-repeat: no-repeat;
@@ -39,23 +38,23 @@
     
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand" style="background-color: dimgray;border-radius: 5px;padding: 10px 20px 10px;" href="/">Homepage</a>
+            <a class="navbar-brand" style="background-color: #007bff; border-radius: 5px;padding: 10px 20px 10px;" href="/">Homepage</a>
         </div>
         <div class="navbar-collapse collapse dual-collapse2 st">
             <ul class="navbar-nav mr-auto">
                 {% if current_user.is_authenticated %}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" style="background-color: dimgray;border-radius: 5px; padding: 10px 20px 10px; margin-right: 10px;" href="#" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" style="background-color: #007bff;border-radius: 5px; padding: 10px 20px 10px; margin-right: 10px;" href="#" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Profile
                     </a>
-                    <div class="dropdown-menu" style="background-color: dimgray;border-radius: 5px;padding: 10px 20px 10px;" aria-labelledby="navbarDropdown">
+                    <div class="dropdown-menu" style="background-color: #007bff;border-radius: 5px;padding: 10px 20px 10px;" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" style="color: white;" onmouseover="this.style.color='dimgray'" onmouseout="this.style.color='white'" href="{{ url_for('change_email') }}">Change email</a>
                         <a class="dropdown-item" style="color: white;" onmouseover="this.style.color='dimgray'" onmouseout="this.style.color='white'" href="{{ url_for('change_names') }}">Change names</a>
                         <a class="dropdown-item" style="color: white;" onmouseover="this.style.color='dimgray'" onmouseout="this.style.color='white'" href="{{ url_for('change_password') }}">Change password</a>
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link align-self-center" style="background-color: dimgray;border-radius: 5px;padding: 10px 20px 10px;" href="{{ url_for('logout') }}">Logout</a>
+                    <a class="nav-link align-self-center" style="background-color: #007bff;border-radius: 5px;padding: 10px 20px 10px;" href="{{ url_for('logout') }}">Logout</a>
                 </li>
                 {% else %}
                 <li class="nav-item">
@@ -69,7 +68,6 @@
             </ul>
         </div>
     </nav>
-    <div class="parallax">sdftghujifdghcrbwlrvbrlegfbwelfyewlfbvlewblblbelbffelibqf</div>
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <ul class=flashes>
