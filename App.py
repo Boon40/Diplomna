@@ -1,7 +1,7 @@
 
 from Decorators import check_confirmed
 from Database import db_session, init_db
-from Models import User
+from Models import Notification, User, Signal
 
 from datetime import datetime
 import uuid
@@ -43,7 +43,17 @@ def unauthorized():
 def index():
     if current_user.is_authenticated:
         if current_user.confirmed == 1:
-            return render_template("index.html")
+            info = Notification.query.order_by(Notification.id.desc()).limit(20).all()
+            data = Signal.query.all()
+            signals = []
+            notifications = []
+            for i in info:
+                print("asd")
+                notifications.append(i)
+            for i in data:
+                signals.append(i)
+                print ("qwe")
+            return render_template("index.html", notifications=enumerate(notifications), signals=enumerate(signals))
         else:
             return redirect(url_for('unconfirmed'))
     else:

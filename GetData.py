@@ -13,6 +13,11 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+from Database import db_session, init_db
+from Models import Candle
+
+#init_db()
+
 engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
 
 def getHistoricalData(token_name, candleSize):
@@ -194,12 +199,12 @@ def findSMA(df, periods, SMAs = []):
 
 if __name__ == "__main__":
     #getHistoricalData1Day('BTCUSDT')
-    getHistoricalData('BTCUSDT', "1M")
+    getHistoricalData('BTCUSDT', "15M")
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
     print (df)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(getCurrentData('BTCUSDT', engine, "1M"))
+    loop.create_task(getCurrentData('BTCUSDT', engine, "15M"))
     #loop.create_task(getCurrentData1Day('BTCUSDT'))
     loop.run_forever()

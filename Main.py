@@ -1,3 +1,5 @@
+from audioop import add
+from curses import def_shell_mode
 from xml.dom import NotFoundErr
 from binance.client import Client
 from binance import BinanceSocketManager
@@ -12,10 +14,16 @@ from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 import asyncio
 
+from Database import init_db, db_session
+from Models import Notification, Signal
+
+init_db()
+
 EMA_lenght = 10
 ifGoldenCross = False
 isClose = False
-global notifications
+notificationCount = 0
+
 
 def findLowestPrice(amount, df):
     lowest = df.ClosePrice[0]
@@ -91,23 +99,53 @@ def findCross(df, start, short = False):
     for i in range (start, len(df) - 1):
         if lineBig[i] > lineSmall[i] and ifGoldenCross == True:
             if SMASmall == 5 and SMABig == 15:
-                message = "There was a death cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go down a bit in the short term"
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="There was a death cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]),
+                    goingUp = False
+                    )
+                db_session.add(notification)
+                db_session.commit()
             elif SMASmall == 50 and SMABig == 100:
-                message = "There was a death cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go down at the long term"
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="There was a death cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]),
+                    goingUp = False
+                    )
+                db_session.add(notification)
+                db_session.commit()
             ifGoldenCross = False
         elif lineBig[i] < lineSmall[i] and ifGoldenCross == False:
             if SMASmall == 5 and SMABig == 15:
-                message = "There was a golden cross by SMA " + str(SMASmall) + " and SMA " + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go up a bit in the short term"
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="There was a golden cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]),
+                    goingUp = True
+                    )
+                signal = Signal(
+                    data=df.CloseTime[i],
+                    stopLoss = (df.ClosePrice[i] / 100) * 98,
+                    targetPrice = (df.ClosePrice[i] / 100) * 102,
+                    openPrice = df.ClosePrice[i]
+                    )
+                db_session.add(signal)
+                db_session.add(notification)
+                db_session.commit()
             elif SMASmall == 50 and SMABig == 100:
-                message = "There was a golden cross by SMA " + str(SMASmall) + " and SMA " + str(SMABig) + " at around " + str(df.CloseTime[i]) + " - price should go up at the long term"
-                print (message)
-                notifications.append(message) 
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="There was a golden cross by SMA " + str(SMASmall) + " and SMA" + str(SMABig) + " at around " + str(df.CloseTime[i]),
+                    goingUp = True
+                    )
+                signal = Signal(
+                    data=df.CloseTime[i],
+                    stopLoss = (df.ClosePrice[i] / 100) * 98,
+                    targetPrice = (df.ClosePrice[i] / 100) * 102,
+                    openPrice = df.ClosePrice[i]
+                    )
+                db_session.add(signal)
+                db_session.add(notification)
+                db_session.commit()
             ifGoldenCross = True
 
 def biggestTrendFibonacci(df):
@@ -160,31 +198,52 @@ def isCloseToLines(df, start):
 
         if price > (upLine - delta):
             if price < upLine + delta and isClose is False:
-                message = "Current price is close to the " + str(upLine) + " resistance zone -" + str(i)
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="Current price is close to the " + str(upLine) + " resistance zone -" + str(df.CloseTime[i]),
+                )
+                db_session.add(notification)
+                db_session.commit()
                 isClose = True
                 isBounce += 1
             elif price > upLine + delta:
                 isClose = False
-                message = "A candle closed above the " + str(upLine) + " resistance zone -" + str(i)
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="A candle closed above the " + str(upLine) + " resistance zone -" + str(df.CloseTime[i]),
+                    goingUp = True
+                )
+                signal = Signal(
+                    data=df.CloseTime[i],
+                    stopLoss = (df.ClosePrice[i] / 100) * 98,
+                    targetPrice = (df.ClosePrice[i] / 100) * 102,
+                    openPrice = df.ClosePrice[i]
+                    )
+                db_session.add(signal)
+                db_session.add(notification)
+                db_session.commit()
                 currentInterval += 1
                 isBounce -= 1
 
         elif price < (downLine + delta):
             if price > downLine - delta and isClose is False:
-                message = "Current price is close to the " + str(downLine) + " support zone -" + str(i)
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="Current price is close to the " + str(downLine) + " support zone -" + str(df.CloseTime[i]),
+                )
+                db_session.add(notification)
+                db_session.commit()
                 isClose = True
                 isBounce -= 1
             elif price < downLine - delta:
                 isClose = False
-                message = "A candle closed below the " + str(downLine) + " support zone -" + str(i)
-                print (message)
-                notifications.append(message)
+                notification = Notification(
+                    data=df.CloseTime[i], 
+                    information="A candle closed below the " + str(downLine) + " support zone -" + str(df.CloseTime[i]),
+                    goingUp = False
+                )
+                db_session.add(notification)
+                db_session.commit()
                 currentInterval -= 1
                 isBounce += 1
 
@@ -192,19 +251,37 @@ def isCloseToLines(df, start):
             if isClose:
                 isClose = False
                 if isBounce > 0:
-                    message = "The resistance zone was not breaked - price should be boncing down now"
-                    print (message)
-                    notifications.append(message)
+                    notification = Notification(
+                        data=df.CloseTime[i], 
+                        information="The resistance zone was not breaked - price should be boncing down now",
+                        goingUp = False
+                    )
+                    db_session.add(notification)
+                    db_session.commit()
                     isBounce = 0
                 elif isBounce < 0:
-                    message = "The support zone was not breaked - price should be bouncing up now"
-                    print (message)
-                    notifications.append(message)
+                    notification = Notification(
+                        data=df.CloseTime[i], 
+                        information="The support zone was not breaked - price should be bouncing up now",
+                        goingUp = True
+                    )
+                    signal = Signal(
+                        data=df.CloseTime[i],
+                        stopLoss = (df.ClosePrice[i] / 100) * 98,
+                        targetPrice = (df.ClosePrice[i] / 100) * 102,
+                        openPrice = df.ClosePrice[i]
+                    )
+                    db_session.add(signal)
+                    db_session.add(notification)
+                    db_session.commit()
                     isBounce = 0
                 else:
-                    message = "Price is not close to either of the zones anymore"
-                    print (message)
-                    notifications.append(message)
+                    notification = Notification(
+                        data=df.CloseTime[i], 
+                        information="Price is not close to either of the zones anymore",
+                    )
+                    db_session.add(notification)
+                    db_session.commit()
 
 
 def displayCharts(df):
@@ -240,21 +317,30 @@ async def checkChanges(engine, candleSizeSeconds):
         df = df.iloc[:]
         findCross(df, len(df) - 2, False)
         isCloseToLines(df, len(df) - 2)
+        signals = Signal.query.all()
+        for signal in signals:
+            percentage = ((df[len(df) - 1].ClosePrice / signal.openPrice) - 1) / 100
+            signal.percentage = percentage
+            if df[len(df) - 1].ClosePrice > signal.targetPrice:
+                print ("signal closed with a", percentage, "percent profit")
+                signal.closed = True
+            elif df[len(df) - 1].ClosePrice < signal.stopLoss:
+                print ("signal closed with a", percentage, "percent loss")
+                signal.closed = True
+            db_session.commit()
         df = df.iloc[len(df) - 1:]
         print (df)
         print ("________________")
 
 if __name__ == "__main__":
-    notifications = []
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
-    df = findEMA(df, [])
+    #df = findEMA(df, [])
     print (df)
-    #findCross(df, 0, False)
+    findCross(df, 0, False)
     candleSizeSeconds = int((df.OpenTime[1] - df.OpenTime[0]).total_seconds())
-    #isCloseToLines(df, 0)
-    i = 0
+    isCloseToLines(df, 0)
     #displayCharts(df)
     loop = asyncio.get_event_loop()
     loop.create_task(checkChanges(engine, candleSizeSeconds))

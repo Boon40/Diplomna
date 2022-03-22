@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum, Boolean
+from sqlalchemy import FLOAT, Column, Integer, String, ForeignKey, DateTime, Enum, Boolean, null
 from sqlalchemy.orm import relationship, aliased
 from sqlalchemy.sql.expression import func
 from datetime import datetime
@@ -31,3 +31,27 @@ class User(Base):
 
     def is_confirmed(self):
         return self.confirmed
+
+class Candle(Base):
+    __tablename__ = 'candle'
+    id = Column(Integer, primary_key=True)
+    openTime = Column(Date, nullable=False)
+    closeTime = Column(Date, nullable=False)
+
+class Notification(Base):
+    __tablename__ = 'notification'
+    id = Column(Integer, primary_key=True)
+    data = Column(Date, nullable=False)
+    information = Column(String, nullable=False)
+    goingUp = Column(Boolean, nullable=True)
+
+class Signal(Base):
+    __tablename__ = 'signal'
+    id = Column(Integer, primary_key=True)
+    data = Column(Date, nullable=False)
+    stopLoss = Column(FLOAT, nullable=False)
+    targetPrice = Column(FLOAT, nullable=False)
+    openPrice = Column(FLOAT, nullable=False)
+    closed = Column(Boolean, default=False)
+    percentage = Column(FLOAT, nullable=True)
+    

@@ -32,6 +32,65 @@ Home
             }
         );
     </script>
+
+</div>
+<div style="display: flex;">
+    <ul class="list-group" style="width: 20%; margin: auto; margin-left: 10px;">
+        {% for i, signal in signals%}
+            {% if not signal.close %}
+                <div style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">
+                    <h4 style="text-align: center; color: white";>
+                        <table>
+                            <tr>
+                                <th>id</th>
+                                <th>op</th>
+                                <th>sl</th>
+                                <th>t</th>
+                                <th>p</th>
+                                <th>closed</th>
+                            </tr>
+                            <td>{{i + 1}}. </td><td>OP:{{signal.openPrice}} </td><td>SL:{{signal.stopLoss}} </td><td>T:{{signal.target}} </td><td>P:{{signal.percentage}} </td><td>{{signal.closed}}</td>
+                        </table>    
+                    </h4>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <ul class="list-group" style="width: 53.2%; margin: auto; margin-top: 0;">
+        {% for i, notification in notifications%}
+            <div style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">
+                <h4 style="text-align: center; color: white";>
+                    {{i + 1}}. {{notification.information}} - Price going up: {{notification.goingUp}}
+                </h4>
+            </div>
+        {% endfor %}
+    </ul>
+    <ul class="list-group" style="width: 20%; margin: auto; margin-right: 10px; margin-top: 10px;">
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
+        {% for i, signal in signals%}
+            {%if signal.close %}
+                <div style="text-align: center; color: white; background-color: #007bff; border-radius: 20px;">
+                    <h4 style="text-align: center; color: white";>
+                        {{i + 1}}. OP:{{signal.openPrice}} SL:{{signal.stopLoss}} T:{{signal.target}} P:{{signal.percentage}} {{signal.closed}}
+                    </h4>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </ul>
 </div>
 
 {% endblock %}
+
