@@ -1,4 +1,4 @@
-from sqlalchemy import FLOAT, Column, Integer, String, ForeignKey, DateTime, Enum, Boolean, null
+from sqlalchemy import FLOAT, Column, Integer, String, ForeignKey, DateTime, Enum, Boolean, null, true
 from sqlalchemy.orm import relationship, aliased
 from sqlalchemy.sql.expression import func
 from datetime import datetime
@@ -43,11 +43,12 @@ class Notification(Base):
     id = Column(Integer, primary_key=True)
     data = Column(Date, nullable=False)
     information = Column(String, nullable=False)
-    goingUp = Column(Boolean, nullable=True)
 
 class Signal(Base):
     __tablename__ = 'signal'
     id = Column(Integer, primary_key=True)
+    information = Column(String, nullable=False)
+    possition = Column(Boolean, nullable=False)
     data = Column(Date, nullable=False)
     stopLoss = Column(FLOAT, nullable=False)
     targetPrice = Column(FLOAT, nullable=False)

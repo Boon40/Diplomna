@@ -39,6 +39,34 @@ def load_user(user_id):
 def unauthorized():
     return redirect(url_for('login'))
 
+@app.route('/current_signals', methods=['GET', 'POST'])
+def current_signals():
+    if current_user.is_authenticated:
+        if current_user.confirmed == 1:
+            data = Signal.query.all()
+            signals = []
+            for i in data:
+                signals.append(i)
+            return render_template("current_signals.html", signals=enumerate(signals))
+        else:
+            return redirect(url_for('unconfirmed'))
+    else:
+        return render_template("index_for_non_users.html")
+
+@app.route('/closed_signals', methods=['GET', 'POST'])
+def closed_signals():
+    if current_user.is_authenticated:
+        if current_user.confirmed == 1:
+            data = Signal.query.all()
+            signals = []
+            for i in data:
+                signals.append(i)
+            return render_template("closed_signals.html", signals=enumerate(signals))
+        else:
+            return redirect(url_for('unconfirmed'))
+    else:
+        return render_template("index_for_non_users.html")
+
 @app.route('/',methods=['GET', 'POST'])
 def index():
     if current_user.is_authenticated:
@@ -48,11 +76,9 @@ def index():
             signals = []
             notifications = []
             for i in info:
-                print("asd")
                 notifications.append(i)
             for i in data:
                 signals.append(i)
-                print ("qwe")
             return render_template("index.html", notifications=enumerate(notifications), signals=enumerate(signals))
         else:
             return redirect(url_for('unconfirmed'))

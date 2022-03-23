@@ -35,9 +35,11 @@ Home
 
 </div>
 <div style="display: flex;">
-    <ul class="list-group" style="width: 20%; margin: auto; margin-left: 10px;">
-        {% for i, signal in signals%}
-            {% if not signal.close %}
+    <ul class="list-group" style="width: 30%; margin: auto; margin-left: 10px;">
+        <
+
+        <!-- {% for i, signal in signals%}
+            {% if not signal.closed %}
                 <div style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">
                     <h4 style="text-align: center; color: white";>
                         <table>
@@ -54,19 +56,19 @@ Home
                     </h4>
                 </div>
             {% endif %}
-        {% endfor %}
+        {% endfor %} -->
     </ul>
 
-    <ul class="list-group" style="width: 53.2%; margin: auto; margin-top: 0;">
+    <ul class="list-group" style="width: 30%; margin: auto; margin-top: 0;">
         {% for i, notification in notifications%}
             <div style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">
                 <h4 style="text-align: center; color: white";>
-                    {{i + 1}}. {{notification.information}} - Price going up: {{notification.goingUp}}
+                    {{i + 1}}. {{notification.information}}
                 </h4>
             </div>
         {% endfor %}
     </ul>
-    <ul class="list-group" style="width: 20%; margin: auto; margin-right: 10px; margin-top: 10px;">
+    <ul class="list-group" style="width: 30%; margin: auto; margin-right: 10px; margin-top: 10px;">
         <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
         <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
         <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
@@ -81,7 +83,7 @@ Home
         <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
         <il  style="text-align: center; color: white; background-color: #007bff; border-radius: 20px; margin-top: 10px;">denjfkejnfkaf</il>
         {% for i, signal in signals%}
-            {%if signal.close %}
+            {% if signal.closed %}
                 <div style="text-align: center; color: white; background-color: #007bff; border-radius: 20px;">
                     <h4 style="text-align: center; color: white";>
                         {{i + 1}}. OP:{{signal.openPrice}} SL:{{signal.stopLoss}} T:{{signal.target}} P:{{signal.percentage}} {{signal.closed}}
