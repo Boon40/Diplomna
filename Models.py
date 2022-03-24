@@ -55,4 +55,5 @@ class Signal(Base):
     openPrice = Column(FLOAT, nullable=False)
     closed = Column(Boolean, default=False)
     percentage = Column(FLOAT, nullable=True)
+    closeDate = Column(Date, nullable=True)
     

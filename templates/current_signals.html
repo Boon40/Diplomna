@@ -89,10 +89,12 @@ Current Signals
             <th>Open Price</th>
             <th>Stop Loss</th>
             <th>Target Price</th>
+            <th>Date</th>
             <th>Percentage</th>
         </tr>
     </thead>
     {% for i, signal in signals %}
+    {%if not signal.closed %}
     <tbody>
         <tr>
             <td>
@@ -119,6 +121,15 @@ Current Signals
                 <div class="user-info">
                     <div class="user-info__basic">
                         <h4 class="text">
+                            {{signal.openPrice}}
+                        </h4>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="user-info">
+                    <div class="user-info__basic">
+                        <h4 class="text">
                             {{signal.stopLoss}}
                         </h4>
                     </div>
@@ -134,15 +145,6 @@ Current Signals
                 </div>
             </td>
             <td>
-                <div class="user-info">
-                    <div class="user-info__basic">
-                        <h4 class="text">
-                            {{signal.percentage}}
-                        </h4>
-                    </div>
-                </div>
-            </td>
-            <td>
                 <div class="user-info" >
                     <div class="user-info__basic">
                         <h4 class="text">
@@ -151,8 +153,28 @@ Current Signals
                     </div>
                 </div>
             </td>
+            <td>
+                <div class="user-info" >
+                    <div class="user-info__basic">
+                        {% if signal.percentage > 0 %}
+                            <h4 style="color: #7FFF00" class="text">
+                                <i class="bi bi-arrow-up"></i> {{signal.percentage}}%
+                            </h4>
+                        {% elif signal.percentage < 0 %}
+                            <h4 style="color: red" class="text">
+                                <i class="bi bi-arrow-down"></i> {{signal.percentage}}%
+                            </h4>
+                        {% else %}
+                            <h4 class="text">
+                                -{{signal.percentage}}%
+                            </h4>
+                        {% endif %}
+                    </div>
+                </div>
+            </td>
         </tr>
     </tbody>
+    {% endif %}
     {% endfor %}
 </table>
 
