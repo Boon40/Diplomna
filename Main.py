@@ -378,9 +378,7 @@ def checkSignals(df):
     for i in range (1, Signal.query.count() + 1):
         signal = Signal.query.filter_by(id = i).first()
         percentage = round((((df.ClosePrice[len(df) - 1] - signal.openPrice) * 100) / signal.openPrice), 2)
-        print (percentage)
-        if not signal.possition:
-            percentage *= -1
+
         print (percentage)
         if signal.closed:
             continue
