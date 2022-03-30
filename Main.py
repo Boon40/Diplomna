@@ -179,29 +179,20 @@ def biggestTrendFibonacci(df):
 
     return [sixthLine, fifthLine, forthLine, thirdLine, secondLine, firstLine]
 
-def deltaLines(lines = []):
-    dLines = []
-
-    for currentInterval in range(1,6):
-        upLine = lines[currentInterval]
-        downLine = lines[currentInterval - 1]
-        delta = (upLine - downLine) * 5 / 100
-        dLines.append(downLine + delta)
-        dLines.append(upLine - delta)
-    return dLines
 
 def BollingerBands(df, start):
     for i in range (start, (len(df) - 1)):
-        difference = df.UpperBB[i] - df.LowerBB[i]
         if df.ClosePrice[i] < df.LowerBB[i]:
             signal = Signal(
                 data=df.CloseTime[i],
                 information="Candle closed below the lower Bollinger Band at around " + str(df.CloseTime[i]),
                 possition = True,
                 stopLoss = round(df.ClosePrice[i] * 0.99, 2),
-                targetPrice = round(df.UpperBB[i], 2),
-                openPrice = round(df.ClosePrice[i])
+                targetPrice = round(df.SMA20[i], 2),
+                openPrice = round(df.ClosePrice[i]),
+                targetSMA = True
             )
+            print ("SMA20:", round(df.SMA20[i], 2))
             db_session.add(signal)
             db_session.commit()
         elif df.ClosePrice[i] > df.UpperBB[i]:
@@ -210,14 +201,13 @@ def BollingerBands(df, start):
                 information="Candle closed above the upper Bollinger Band at around " + str(df.CloseTime[i]),
                 possition = False,
                 stopLoss = round(df.ClosePrice[i] * 1.01, 2),
-                targetPrice = round(df.LowerBB[i], 2),
-                openPrice = round(df.ClosePrice[i], 2)
+                targetPrice = round(df.SMA20[i], 2),
+                openPrice = round(df.ClosePrice[i], 2),
+                targetSMA = True
                 )
+            print ("SMA20:", round(df.SMA20[i], 2))
             db_session.add(signal)
             db_session.commit()
-
-        
-
 
 def isCloseToLines(df, start):
     lines = biggestTrendFibonacci(df)
@@ -347,41 +337,16 @@ def isCloseToLines(df, start):
                     db_session.add(notification)
                     db_session.commit()
 
-
-def displayCharts(df):
-    #matplotlib.use('TkAgg')
-    newDF = df.drop(['CloseTime', 'Symbol', 'OpenTime'], axis = 1, inplace = False)
-    newDF.index = pd.DatetimeIndex(df['OpenTime'])
-    newDF.rename(columns = {'OpenPrice': 'Open', 'High': 'High', 'Low': 'Low', 'ClosePrice': 'Close'}, inplace = True)
-    #EMA = mpl.make_addplot(newDF["EMA"].values, panel = 0, color = 'fuchsia')
-    #floatEMA = []
-    #for i in range (0, len(df) - EMA_lenght):
-    #    floatEMA.append(int(df.EMA[i + EMA_lenght]))
-
-    #TODO display the EMA
-
-    lines = biggestTrendFibonacci(df)
-    dlines = deltaLines(lines)
-    alphaLines = []
-    for i in range(0, 6):
-        alphaLines.append([(df.OpenTime[0], lines[i]), (df.OpenTime[len(newDF) - 1], lines[i])])
-    for i in range(0, 10):
-        alphaLines.append([(df.OpenTime[0], dlines[i]), (df.OpenTime[len(newDF) - 1], dlines[i])])
-    alphaLines.sort()
-
-    mpl.plot(newDF, type = 'candle', style = 'charles', title = 'BTC Price', mav = (5, 15), alines = dict(alines=alphaLines,
-                                                                                                              colors=['blue', 'red', 'red'],
-                                                                                                              linewidths = 0.5))
-    mpl.show()
-
 def checkSignals(df):
     for i in range (1, Signal.query.count() + 1):
         signal = Signal.query.filter_by(id = i).first()
         percentage = round((((df.ClosePrice[len(df) - 1] - signal.openPrice) * 100) / signal.openPrice), 2)
-
         print (percentage)
+
         if signal.closed:
             continue
+        if signal.targetSMA:
+            signal.targetPrice = round(df.SMA20[len(df) - 1], 2)
         if signal.possition:
             signal.percentage = percentage
             if df.ClosePrice[len(df) - 1] > signal.targetPrice or df.ClosePrice[len(df) - 1] < signal.stopLoss:
@@ -421,7 +386,6 @@ if __name__ == "__main__":
     #BollingerBands(df, 0)
     candleSizeSeconds = int((df.OpenTime[1] - df.OpenTime[0]).total_seconds())
     #isCloseToLines(df, 0)
-    #displayCharts(df)
     print ("all fine!")
     loop = asyncio.get_event_loop()
     loop.create_task(checkChanges(engine, candleSizeSeconds))

@@ -15,7 +15,7 @@ Closed Signals
                 "width": 980,
                 "height": 610,
                 "symbol": "BTCUSDT",
-                "interval": "D",
+                "interval": "15",
                 "timezone": "Africa/Johannesburg",
                 "theme": "dark",
                 "style": "1",
@@ -92,6 +92,7 @@ Closed Signals
             <th>Target Price</th>
             <th>Open Date</th>
             <th>Close Date</th>
+            <th>Information</th>
             <th>Percentage</th>
         </tr>
     </thead>
@@ -150,7 +151,7 @@ Closed Signals
                 <div class="user-info" >
                     <div class="user-info__basic">
                         <h4 class="text">
-                            {{signal.data}}
+                            {{signal.information}}
                         </h4>
                     </div>
                 </div>
@@ -160,6 +161,15 @@ Closed Signals
                     <div class="user-info__basic">
                         <h4 class="text">
                             {{signal.closeDate}}
+                        </h4>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="user-info" >
+                    <div class="user-info__basic">
+                        <h4 class="text">
+                            {{signal.information}}
                         </h4>
                     </div>
                 </div>

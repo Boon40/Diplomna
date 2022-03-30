@@ -56,4 +56,5 @@ class Signal(Base):
     closed = Column(Boolean, default=False)
     percentage = Column(FLOAT, nullable=True)
     closeDate = Column(Date, nullable=True)
+    targetSMA = Column(Boolean, nullable=False, default=False)
     
