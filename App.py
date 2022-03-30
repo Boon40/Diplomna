@@ -1,5 +1,3 @@
-
-from Decorators import check_confirmed
 from Database import db_session, init_db
 from Models import Notification, User, Signal
 
@@ -22,10 +20,8 @@ from flask_mail import Mail, Message
 login_manager = LoginManager()
 app = Flask(__name__)
 app.secret_key = "SECRET_KEY"
-app.config.from_pyfile('Config.cfg')
 
 s = URLSafeTimedSerializer('Secret!')
-mail = Mail(app)
 
 init_db()
 
@@ -42,60 +38,42 @@ def unauthorized():
 @app.route('/current_signals', methods=['GET', 'POST'])
 def current_signals():
     if current_user.is_authenticated:
-        if current_user.confirmed == 1:
-            data = Signal.query.all()
-            signals = []
-            for i in data:
-                signals.append(i)
-            return render_template("current_signals.html", signals=enumerate(signals))
-        else:
-            return redirect(url_for('unconfirmed'))
+        data = Signal.query.all()
+        signals = []
+        for i in data:
+            signals.append(i)
+        return render_template("current_signals.html", signals=enumerate(signals))
     else:
         return render_template("index_for_non_users.html")
 
 @app.route('/closed_signals', methods=['GET', 'POST'])
 def closed_signals():
     if current_user.is_authenticated:
-        if current_user.confirmed == 1:
-            data = Signal.query.all()
-            signals = []
-            for i in data:
-                signals.append(i)
-            return render_template("closed_signals.html", signals=enumerate(signals))
-        else:
-            return redirect(url_for('unconfirmed'))
+        data = Signal.query.all()
+        signals = []
+        for i in data:
+            signals.append(i)
+        return render_template("closed_signals.html", signals=enumerate(signals))
     else:
         return render_template("index_for_non_users.html")
 
 @app.route('/',methods=['GET', 'POST'])
 def index():
     if current_user.is_authenticated:
-        if current_user.confirmed == 1:
-            info = Notification.query.order_by(Notification.id.desc()).limit(20).all()
-            data = Signal.query.all()
-            signals = []
-            notifications = []
-            for i in info:
-                notifications.append(i)
-            for i in data:
-                signals.append(i)
-            return render_template("index.html", notifications=enumerate(notifications), signals=enumerate(signals))
-        else:
-            return redirect(url_for('unconfirmed'))
+        info = Notification.query.order_by(Notification.id.desc()).limit(20).all()
+        data = Signal.query.all()
+        signals = []
+        notifications = []
+        for i in info:
+            notifications.append(i)
+        for i in data:
+            signals.append(i)
+        return render_template("index.html", notifications=enumerate(notifications), signals=enumerate(signals))
     else:
         return render_template("index_for_non_users.html")
 
-def send_token(email):
-    token = s.dumps(email, salt='email-confirm')
-    msg = Message('Confirm Email', sender='diplomnatues@abv.bg', recipients=[email])
-    link = url_for('confirm_email', token=token, _external=True)
-    msg.body = 'Your link is {}'.format(link)
-    mail.send(msg)
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     if request.method == "POST":
         firstName = request.form["firstName"]
         lastName = request.form["lastName"]
@@ -116,9 +94,7 @@ def register():
             return render_template("register.html")
 
         if confirm_pasword == password:
-            user = User(password=generate_password_hash(password), email=email, firstName=firstName, lastName=lastName, birthDate=date_of_birth, confirmed=True)
-
-            #send_token(email)
+            user = User(password=generate_password_hash(password), email=email, firstName=firstName, lastName=lastName, birthDate=date_of_birth)
 
             db_session.add(user)
             db_session.commit()
@@ -126,9 +102,8 @@ def register():
             user.login_id = str(uuid.uuid4())
             db_session.commit()
             login_user(user)
-            flash('You registered and are now logged in. Welcome!', 'success')
-            return redirect(url_for('unconfirmed'))
-            #return render_template("go_confirm.html", email = email)
+            flash('Register successful. You are now logged in!', 'success')
+            return redirect(url_for('index'))
         else:
             flash("Passwords doesn`t match!","danger")
 
@@ -136,8 +111,6 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     if request.method == 'GET':
         return render_template("login.html")
     else:
@@ -147,7 +120,7 @@ def login():
             user.login_id = str(uuid.uuid4())
             db_session.commit()
             login_user(user)
-            return redirect(url_for('unconfirmed'))
+            return redirect(url_for('index'))
         else:
             flash("Wrong email or password!","danger")
             return redirect(url_for('login'))
@@ -162,7 +135,6 @@ def logout():
 
 @app.route('/change_email', methods=['GET', 'POST'])
 @login_required
-@check_confirmed
 def change_email():
     if request.method == "POST":
         currentEmail = request.form["currentEmail"]
@@ -194,7 +166,6 @@ def change_email():
 
 @app.route('/change_names', methods=['GET', 'POST'])
 @login_required
-@check_confirmed
 def change_names():
     if request.method == "POST":
         newFirstName = request.form["newFirstName"]
@@ -214,7 +185,6 @@ def change_names():
 
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
-@check_confirmed
 def change_password():
     if request.method == "POST":
         currentPassword = request.form["currentPassword"]
@@ -246,68 +216,4 @@ def forgotPassword():
         msg = Message(subject, sender='diplomnatues@abv.bg', recipients=[user.email])
         link = url_for('reset_with_token', token=token, _external=True)
         msg.body = 'Your link is {}'.format(link)
-        mail.send(msg)
         return render_template('check_email.html')
-
-@app.route('/resend', methods=['GET', 'POST'])
-def resend():
-    send_token(current_user.email)
-    return redirect(url_for('unconfirmed'))
-
-def send_token(email):
-    token = s.dumps(email, salt='email-confirm')
-    msg = Message('Confirm Email', sender='diplomnatues@abv.bg', recipients=[email])
-    link = url_for('confirm_email', token=token, _external=True)
-    msg.body = 'Your link is {}'.format(link)
-    mail.send(msg)
-
-@app.route('/reset/<token>', methods=["GET", "POST"])
-def reset_with_token(token):
-    try:
-        email = s.loads(token, salt="recover-key", max_age=3600)
-    except:
-        flash('The link is invalid or has expired.', 'danger')
-        return redirect(url_for('index'))
-
-    user = User.query.filter_by(email=email).first()
-    if request.method == 'POST':
-        new_pass = request.form["new_pass"]
-        new_pass_conf = request.form["conf_new_pass"]
-        if new_pass == new_pass_conf:
-            user.password = generate_password_hash(new_pass)
-            db_session.add(user)
-            db_session.commit()
-    else:
-        return render_template("recover_password.html")
-    return redirect(url_for('login'))
-
-@app.route('/confirm_email/<token>')
-@login_required
-def confirm_email(token):
-    try:
-        email = s.loads(token, salt='email-confirm', max_age=3600)
-    except SignatureExpired:
-        email = s.loads(token, salt='email-confirm')
-        user = User.query.filter_by(email=email).first() 
-        db_session.delete(user)
-        db_session.commit()
-        flash('The confirmation link is invalid or has expired.', 'danger')
-        return '<h1>The token is expired!</h1>'
-
-    user = User.query.filter_by(email=email).first() 
-    if user.confirmed:
-        flash('Account already confirmed. Please login.', 'success')
-    else:
-        user.confirmed = True
-        db_session.commit()
-        flash('You have confirmed your account. Thanks!', 'success')
-    return redirect(url_for('index'))
-
-@app.route('/unconfirmed')
-@login_required
-def unconfirmed():
-    if current_user.confirmed:
-        return redirect(url_for('index'))
-    flash('Please confirm your account!', 'warning')
-    return render_template('unconfirmed.html')
-

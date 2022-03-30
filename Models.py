@@ -16,7 +16,6 @@ class User(Base):
     lastName = Column(String(200), nullable=False)
     birthDate = Column(Date, nullable=False)
     login_id = Column(String(36), nullable=True)
-    confirmed = Column(Boolean, nullable=False, default=False)
 
     @property
     def is_authenticated(self):
@@ -28,9 +27,6 @@ class User(Base):
 
     def get_id(self):
         return self.login_id
-
-    def is_confirmed(self):
-        return self.confirmed
 
 class Candle(Base):
     __tablename__ = 'candle'

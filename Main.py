@@ -214,7 +214,7 @@ def isCloseToLines(df, start):
     global isClose
 
     price = df.ClosePrice[start]
-
+    print (lines, "price:", price)
     currentInterval = 0
     for j in lines:
         if price > j:
