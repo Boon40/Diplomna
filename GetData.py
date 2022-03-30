@@ -171,12 +171,12 @@ def createFrame(msg, SMAs, BBs):
     else:
         frame = frame.loc[:,["Symbol", "OpenTime", "OpenPrice", "High", "Low", "ClosePrice", "CloseTime"]]
         frame.columns = ['Symbol', 'OpenTime', 'OpenPrice', 'High', 'Low', 'ClosePrice', 'CloseTime']
-    frame.OpenTime = pd.to_datetime(frame.OpenTime, unit='ms')
+    frame.OpenTime = pd.to_datetime(frame.OpenTime + 10800000, unit='ms')
     frame.OpenPrice = frame.OpenPrice.astype(float)
     frame.High = frame.High.astype(float)
     frame.Low = frame.Low.astype(float)
     frame.ClosePrice = frame.ClosePrice.astype(float)
-    frame.CloseTime = pd.to_datetime(frame.CloseTime, unit='ms')
+    frame.CloseTime = pd.to_datetime(frame.CloseTime + 10800000, unit='ms')
     if len(SMAs) > 0:
         frame.SMA20 = frame.SMA20.astype(float)
         frame.SMA50 = frame.SMA50.astype(float)
@@ -223,12 +223,12 @@ def findBollingeBands (SMA, deviation):
       
 if __name__ == "__main__":
     #getHistoricalData1Day('BTCUSDT')
-    getHistoricalData('BTCUSDT', "1H")
+    getHistoricalData('BTCUSDT', "15M")
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
     print (df)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(getCurrentData('BTCUSDT', engine, "1H"))
+    loop.create_task(getCurrentData('BTCUSDT', engine, "15M"))
     #loop.create_task(getCurrentData1Day('BTCUSDT'))
     loop.run_forever()

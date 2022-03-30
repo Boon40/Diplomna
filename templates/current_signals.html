@@ -16,7 +16,7 @@ Current Signals
                 "height": 610,
                 "symbol": "BTCUSDT",
                 "interval": "D",
-                "timezone": "Africa/Johannesburg",
+                "timezone": "Europe/Athens",
                 "theme": "dark",
                 "style": "1",
                 "locale": "en",
@@ -96,7 +96,6 @@ Current Signals
         </tr>
     </thead>
     {% for i, signal in signals %}
-    {%if not signal.closed %}
     <tbody>
         <tr>
             <td>
@@ -185,7 +184,6 @@ Current Signals
             </td>
         </tr>
     </tbody>
-    {% endif %}
     {% endfor %}
 </table>
 

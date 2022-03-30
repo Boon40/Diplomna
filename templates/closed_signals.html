@@ -16,7 +16,7 @@ Closed Signals
                 "height": 610,
                 "symbol": "BTCUSDT",
                 "interval": "15",
-                "timezone": "Africa/Johannesburg",
+                "timezone": "Europe/Athens",
                 "theme": "dark",
                 "style": "1",
                 "locale": "en",
@@ -92,8 +92,8 @@ Closed Signals
             <th>Target Price</th>
             <th>Open Date</th>
             <th>Close Date</th>
-            <th>Information</th>
             <th>Percentage</th>
+            <th>Information</th>
         </tr>
     </thead>
     {% for i, signal in signals %}
@@ -151,7 +151,7 @@ Closed Signals
                 <div class="user-info" >
                     <div class="user-info__basic">
                         <h4 class="text">
-                            {{signal.information}}
+                            {{signal.data}}
                         </h4>
                     </div>
                 </div>
@@ -161,15 +161,6 @@ Closed Signals
                     <div class="user-info__basic">
                         <h4 class="text">
                             {{signal.closeDate}}
-                        </h4>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <div class="user-info" >
-                    <div class="user-info__basic">
-                        <h4 class="text">
-                            {{signal.information}}
                         </h4>
                     </div>
                 </div>
@@ -190,6 +181,15 @@ Closed Signals
                                 -{{signal.percentage}}%
                             </h4>
                         {% endif %}
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="user-info" >
+                    <div class="user-info__basic">
+                        <h4 class="text">
+                            {{signal.information}}
+                        </h4>
                     </div>
                 </div>
             </td>
