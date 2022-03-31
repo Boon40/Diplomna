@@ -20,7 +20,6 @@ login_manager = LoginManager()
 app = Flask(__name__)
 app.secret_key = "SECRET_KEY"
 
-mail = Mail(app)
 
 s = URLSafeTimedSerializer('Secret!')
 
@@ -207,51 +206,5 @@ def change_password():
             return redirect(url_for('change_password'))
     else:
         return render_template("change_password.html")
-
-@app.route('/reset/<token>', methods=["GET", "POST"])
-def reset_with_token(token):
-    try:
-        email = s.loads(token, salt="recover-key", max_age=3600)
-    except:
-        flash('The link is invalid or has expired.', 'danger')
-        return redirect(url_for('index'))
-
-    user = User.query.filter_by(email=email).first()
-    if request.method == 'POST':
-        new_pass = request.form["new_pass"]
-        new_pass_conf = request.form["conf_new_pass"]
-        if new_pass == new_pass_conf:
-            user.password = generate_password_hash(new_pass)
-
-            db_session.add(user)
-            db_session.commit()
-    else:
-        return render_template("recover_password.html")
-    return redirect(url_for('login'))
-
-@app.route('/resend', methods=['GET', 'POST'])
-def resend():
-    send_token(current_user.email)
-    return redirect(url_for('unconfirmed'))
-
-def send_token(email):
-    token = s.dumps(email, salt='email-confirm')
-    msg = Message('Confirm Email', sender='nov_meil_tues@abv.bg', recipients=[email])
-    link = url_for('confirm_email', token=token, _external=True)
-    msg.body = 'Your link is {}'.format(link)
-    mail.send(msg)
-
-@app.route('/forgot_password', methods=["GET", "POST"])
-def forgotPassword():
-    if request.method == 'GET':
-        return render_template("forgot_password.html")
-    else:
-        user = User.query.filter_by(email=request.form["email"]).first()
-        subject = "Password reset requested"
-        token = s.dumps(user.email, salt='recover-key')
-        msg = Message(subject, sender='diplomnatues@abv.bg', recipients=[user.email])
-        link = url_for('reset_with_token', token=token, _external=True)
-        msg.body = 'Your link is {}'.format(link)
-        return render_template('check_email.html')
 
 

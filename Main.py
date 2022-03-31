@@ -209,10 +209,6 @@ def isCloseToLines(df, start):
                 isBounce += 1
             elif price > upLine + delta:
                 isClose = False
-                notification = Notification(
-                    data=df.CloseTime[i], 
-                    information="A candle closed above the " + str(round(upLine, 2)) + " resistance zone"
-                )
                 signal = Signal(
                         data=df.CloseTime[i], 
                         information="A candle closed above the " + str(round(upLine, 2)) + "resistance zone - the up trend should continue",
@@ -239,10 +235,6 @@ def isCloseToLines(df, start):
                 isBounce -= 1
             elif price < downLine - delta:
                 isClose = False
-                notification = Notification(
-                    data=df.CloseTime[i], 
-                    information="A candle closed below the " + str(round(downLine, 2)) + " support zone",
-                )
                 signal = Signal(
                         data=df.CloseTime[i], 
                         information="A candle closed below the " + str(round(downLine, 2)) + "support zone - the downtrend should continue",
@@ -261,10 +253,6 @@ def isCloseToLines(df, start):
             if isClose:
                 isClose = False
                 if isBounce > 0:
-                    notification = Notification(
-                        data=df.CloseTime[i], 
-                        information="The resistance zone was not breaked - price should be boncing down now",
-                    )
                     signal = Signal(
                         data=df.CloseTime[i], 
                         information="The resistance zone was not breaked. Price should bounce down",
@@ -278,10 +266,6 @@ def isCloseToLines(df, start):
                     db_session.commit()
                     isBounce = 0
                 elif isBounce < 0:
-                    notification = Notification(
-                        data=df.CloseTime[i], 
-                        information="The support zone was not breaked - price should be bouncing up now",
-                    )
                     signal = Signal(
                         data=df.CloseTime[i], 
                         information="The support zone was not breaked. Price should bounce up",
@@ -294,13 +278,6 @@ def isCloseToLines(df, start):
                     db_session.add(notification)
                     db_session.commit()
                     isBounce = 0
-                else:
-                    notification = Notification(
-                        data=df.CloseTime[i], 
-                        information="Price is not close to either of the zones anymore",
-                    )
-                    db_session.add(notification)
-                    db_session.commit()
 
 def checkSignals(df):
     global bbup

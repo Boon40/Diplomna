@@ -15,9 +15,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from Database import db_session, init_db
-from Models import Candle
 
-#init_db()
 
 engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
 
