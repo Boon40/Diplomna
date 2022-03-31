@@ -16,7 +16,6 @@ from datetime import datetime
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_mail import Mail, Message
 
-
 login_manager = LoginManager()
 app = Flask(__name__)
 app.secret_key = "SECRET_KEY"
@@ -26,7 +25,7 @@ mail = Mail(app)
 s = URLSafeTimedSerializer('Secret!')
 
 init_db()
-
+    
 login_manager.init_app(app)
 
 @login_manager.user_loader
@@ -254,3 +253,5 @@ def forgotPassword():
         link = url_for('reset_with_token', token=token, _external=True)
         msg.body = 'Your link is {}'.format(link)
         return render_template('check_email.html')
+
+

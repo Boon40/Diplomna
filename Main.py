@@ -32,7 +32,6 @@ def findLowestPrice(amount, df):
     lowest = df.ClosePrice[0]
     index = 0
     for i in range (0, amount):
-        #print (i, ": ", df.ClosePrice[i])
         if df.ClosePrice[i] < lowest:
             lowest = df.ClosePrice[i]
             index = i
@@ -159,10 +158,6 @@ def BollingerBands(df, start):
                 openPrice = round(df.ClosePrice[i]),
                 targetSMA = True
             )
-            print ("Lower BB:", round(df.LowerBB[i]), 2)
-            print ("Upper BB:", round(df.UpperBB[i]), 2)
-            print ("SMA20:", round(df.SMA20[i], 2))
-            print ("Price:", round(df.ClosePrice[i], 2))
             db_session.add(signal)
             db_session.commit()
             bbdown = True
@@ -176,10 +171,6 @@ def BollingerBands(df, start):
                 openPrice = round(df.ClosePrice[i], 2),
                 targetSMA = True
                 )
-            print ("Lower BB:", round(df.LowerBB[i]), 2)
-            print ("Upper BB:", round(df.UpperBB[i]), 2)
-            print ("SMA20:", round(df.SMA20[i], 2))
-            print ("Price:", round(df.ClosePrice[i], 2))
             db_session.add(signal)
             db_session.commit()
             bbup = True
@@ -189,7 +180,6 @@ def isCloseToLines(df, start):
     global isClose
 
     price = df.ClosePrice[start]
-    print (lines, "price:", price)
     currentInterval = 0
     for j in lines:
         if price > j:
@@ -318,7 +308,6 @@ def checkSignals(df):
     for i in range (1, Signal.query.count() + 1):
         signal = Signal.query.filter_by(id = i).first()
         percentage = round((((df.ClosePrice[len(df) - 1] - signal.openPrice) * 100) / signal.openPrice), 2)
-        print (percentage)
 
         if signal.closed:
             continue
@@ -354,20 +343,19 @@ async def checkChanges(engine, candleSizeSeconds):
         BollingerBands(df, len(df) - 2)
         checkSignals(df)
         df = df.iloc[len(df) - 1:]
-        print (df)
-        print ("________________")
 
 if __name__ == "__main__":
+    Signal.query.delete()
+    Notification.query.delete()
+    db_session.commit()
     engine = sqlalchemy.create_engine('sqlite:///BTCUSDTstream.db')
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
-    #print (df)
-    findCross(df, 0)
-    #BollingerBands(df, 41)
+    findCross(df, len(df) - 10)
     candleSizeSeconds = int((df.OpenTime[1] - df.OpenTime[0]).total_seconds())
-    isCloseToLines(df, 0)
+    isCloseToLines(df, len(df) - 10)
     checkSignals(df)
-    print ("all fine!")
+    print ("Done!")
     loop = asyncio.get_event_loop()
     loop.create_task(checkChanges(engine, candleSizeSeconds))
     loop.run_forever()

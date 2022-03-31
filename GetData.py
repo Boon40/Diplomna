@@ -1,7 +1,7 @@
 from cmath import sqrt
 from multiprocessing.connection import Client
 from sqlite3 import TimestampFromTicks
-from time import sleep
+from time import sleep, time
 from binance import AsyncClient
 from binance import Client
 from binance import BinanceSocketManager
@@ -49,7 +49,7 @@ def getHistoricalData(token_name, candleSize):
         pastTime = relativedelta(years=1)
     else:
         print ("That's an invalid candle size!")
-        return
+        exit()
     for currKline in client._historical_klines_generator(token_name, candleSize, str(datetime.now() - pastTime)):
         SMA20, SMA50, SMA100 = 0, 0, 0
         BBs = [0, 0]
@@ -83,7 +83,7 @@ def getHistoricalData(token_name, candleSize):
         firstRun = False
         frame = createFrame(currKline, [SMA20, SMA50, SMA100], [BBs[0], BBs[1]])
         frame.to_sql(token_name, engine, if_exists='append', index=False)
-        print (frame)
+
 
 async def getCurrentData(token_name, engine, candleSize):
     asyncClient = await AsyncClient.create("CjhmrIu0k3VdrvML36fnYdx04kyA1u02QbJDUzirFfvHLx8wSEiiiRhRdrTzxika", "5faxSLXjUKKHsHT32kjkL78O75LzkeGI3c8Yp9awSQK7DMOlLoeMb990G1abbwrq")
@@ -105,7 +105,7 @@ async def getCurrentData(token_name, engine, candleSize):
         await asyncio.sleep(86400)
     else:
         print ("That's an invalid candle size!")
-        return
+        exit()
     while True:
         df = pd.read_sql('BTCUSDT', engine)
         df = df.iloc[:]
@@ -152,7 +152,6 @@ async def getCurrentData(token_name, engine, candleSize):
         BBs = findBollingeBands(SMA20, findStandartDeviation(SMAs))
         frame = createFrame(msg[0], [SMA20, SMA50, SMA100], [BBs[0], BBs[1]])
         frame.to_sql(token_name, engine, if_exists='append', index=False)
-        print(frame)
 
 def createFrame(msg, SMAs, BBs):
     values = []
@@ -221,14 +220,22 @@ def findBollingeBands (SMA, deviation):
     lowerBB = SMA - (deviation * 2)
     return [upperBB, lowerBB]
       
+import os
+import sys
+
 if __name__ == "__main__":
-    #getHistoricalData1Day('BTCUSDT')
-    getHistoricalData('BTCUSDT', "15M")
+    if len(sys.argv) < 2:
+        print ("Enter candle size. Options: 1M; 15M; 1H; 4H; 8H; 12H; 1D")
+        exit()
+    elif len(sys.argv) > 2:
+        print ("Too many given arguments!")
+        exit()
+    if os.path.exists("BTCUSDTstream.db"):
+        os.remove("BTCUSDTstream.db")
+    getHistoricalData('BTCUSDT', sys.argv[1])
     df = pd.read_sql('BTCUSDT', engine)
     df = df.iloc[:]
-    print (df)
-
+    print ("Done!")
     loop = asyncio.get_event_loop()
-    loop.create_task(getCurrentData('BTCUSDT', engine, "15M"))
-    #loop.create_task(getCurrentData1Day('BTCUSDT'))
+    loop.create_task(getCurrentData('BTCUSDT', engine, sys.argv[1]))
     loop.run_forever()

@@ -28,12 +28,6 @@ class User(Base):
     def get_id(self):
         return self.login_id
 
-class Candle(Base):
-    __tablename__ = 'candle'
-    id = Column(Integer, primary_key=True)
-    openTime = Column(Date, nullable=False)
-    closeTime = Column(Date, nullable=False)
-
 class Notification(Base):
     __tablename__ = 'notification'
     id = Column(Integer, primary_key=True)
